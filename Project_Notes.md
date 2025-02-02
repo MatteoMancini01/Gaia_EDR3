@@ -33,3 +33,7 @@ Very-long-baseline interferometry (VLBI) is a type of astronomical interferometr
 This is also used to collect data on quasars, the main difference to Gaia is that VLBI works in the radio wavelength 
 and has been historically used to define the celestial reference frame. While Gaia, on the other hand, 
 operates in optical wavelengths and has defined the Gaia Celestial Reference Frame (Gaia-CRF), complementing the ICRF.
+
+### Baryons
+
+Baryons are particles like protons and neutrons. A baryonic component refers to the part of a system, such as galaxies, galactic clusters or the universe itself, that is made of  baryonic matter. Examples include, starts, gas, dust, planets, including black holes and neutron stars if they are from baryonic matter. Essentially, it includes all the "normal" matter we are familiar with.

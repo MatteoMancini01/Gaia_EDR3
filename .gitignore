@@ -26,6 +26,10 @@ src/ *.egg-info/
 build/
 dist/
 
+# Ignoring directory containing data
+
+data_gaia_edr3/
+
 # Cython build artifacts
 *.so
 *.pyd
