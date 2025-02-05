@@ -29,6 +29,7 @@ dist/
 # Ignoring directory containing data
 
 data_gaia_edr3/
+qso_full_data.csv/
 
 # Cython build artifacts
 *.so
