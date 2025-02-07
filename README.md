@@ -1,5 +1,7 @@
 # Project Overview
 
+key publication [link](https://www.aanda.org/articles/aa/full_html/2021/05/aa39734-20/aa39734-20.html)
+
 # Downloading Data
 
 1. <b>Access the Gaia Archive:</b>
