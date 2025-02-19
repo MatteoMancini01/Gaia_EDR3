@@ -40,3 +40,6 @@ qso_full_data.csv/
 # Python bytecode
 __pycache__/
 *.py[cod]
+
+# Igonre csv files
+*.csv
