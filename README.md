@@ -86,6 +86,7 @@ All the required libraries will be automatically installed.
      - Load the data in Python:
 
 4. <b>Downloading full dataset using Python</b> :arrow_down: :inbox_tray:
+
 The above procedure does not allow the download of the full dataset. Instead run the following python code on you notebook. Note you need the Python package [```astroquery```](https://astroquery.readthedocs.io/en/latest/).
 
 Install ```astroquery``` with ```pip install astroquery```, one installed run the following code on your notebook. 
