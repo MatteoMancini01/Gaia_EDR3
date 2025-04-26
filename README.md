@@ -1,16 +1,73 @@
-# Project Overview
+#  Project Overview :mag: :memo:
 
 key publication [link](https://www.aanda.org/articles/aa/full_html/2021/05/aa39734-20/aa39734-20.html)
 
 reference for vector spherical harmonics [link](https://www.aanda.org/articles/aa/pdf/2012/11/aa19927-12.pdf)
 
-# Downloading Data
+---
+## Getting started :rocket:
+---
+### Python Virtual Enviroments :snake::test_tube:
 
-1. <b>Access the Gaia Archive:</b>
+1. Create a Virtual Environment
+
+   Run the following command to create your virtual environment
+
+   ``` bash
+    python -m venv <your_env>
+
+- If the above command fails, please try:
+   ```bash
+   python3 -m venv <your_env>
+
+Replace `<your_env>` with your preferred environment name, e.g. `gaia_venv`.
+
+2. Activate your virtual environment
+
+  Activate your virtual environment with:
+   ```bash
+    source <your_env>/bin/activate
+   ```
+  Deactivate your environment with:
+   ```bash
+    deactivate
+   ```
+3. To install all the required libraries please run the command:
+   ```bash
+   pip install -r requirements.txt
+   ```
+---
+### Conda Environments :snake::test_tube:
+
+1. Create a Conda Environment
+   Run the following command to create your Conda environment
+
+    ```bash
+    conda env create -f environment.yml
+    ```
+
+All the required libraries will be automatically installed.
+
+2. Activate your Conda envorpnment
+
+    ```bash
+    conda activate m2_venv
+    ```
+
+   To deactivate: 
+   
+    ```bash
+    conda deactivate
+    ```
+---
+
+## Downloading Data :ringed_planet: :telescope: :floppy_disk:
+
+1. <b>Access the Gaia Archive:</b> :card_index_dividers:
      - Go to the Gaia Archive: [https://gea.esac.esa.int/archive/](https://gea.esac.esa.int/archive/)
      - This is the official ESA Gaia Archive, where you can query and download the data.
 
-2. <b>Query for QSO-like Objects:</b>
+2. <b>Query for QSO-like Objects:</b> :sparkles: 
      - The QSO-like objects in Gaia EDR3 are provided in the agn_cross_id table.
      - To download the full dataset run the following command on your terminal:
           ```bash
@@ -18,7 +75,7 @@ reference for vector spherical harmonics [link](https://www.aanda.org/articles/a
           ```
         This allows you to download all the ```.cvs.gz``` files.
 
-3. <b>Checking Data</b>
+3. <b>Checking Data</b> :hammer_and_wrench:
      - Extract the files:
        If the files are compressed in a (```.gz```) format, you can extract them with:
        ```bash
@@ -28,7 +85,7 @@ reference for vector spherical harmonics [link](https://www.aanda.org/articles/a
 
      - Load the data in Python:
 
-4. <b>Downloading full dataset using Python</b>
+4. <b>Downloading full dataset using Python</b> :arrow_down: :inbox_tray:
 The above procedure does not allow the download of the full dataset. Instead run the following python code on you notebook. Note you need the Python package [```astroquery```](https://astroquery.readthedocs.io/en/latest/).
 
 Install ```astroquery``` with ```pip install astroquery```, one installed run the following code on your notebook. 
@@ -44,13 +101,16 @@ SELECT
     gs.ra, gs.dec, 
     gs.pmra, gs.pmdec, 
     gs.parallax, gs.parallax_error, 
-    gs.ruwe, gs.phot_g_mean_mag 
+    gs.ruwe, gs.phot_g_mean_mag,
+    gs.nu_eff_used_in_astrometry,
+    gs.pmra_error,
+    gs.pmdec_error,
+    gs.pmra_pmdec_corr,
+    gs.astrometric_params_solved
 FROM gaiadr3.agn_cross_id AS agn
 JOIN gaiadr3.gaia_source AS gs 
 ON agn.source_id = gs.source_id
-WHERE gs.parallax < 5 * gs.parallax_error  -- Remove potential stars
-AND gs.ruwe < 1.4  -- Ensure good astrometric quality
-AND gs.phot_g_mean_mag < 21  -- Bright enough for good measurements
+
 """
 
 # Launch query and download data
