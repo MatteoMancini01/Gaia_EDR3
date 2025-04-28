@@ -7,9 +7,7 @@ These objects are extremely far from us, making QSO-like objects appropriate ref
 from data, is the solar system moving w.r.t. QSO-like object. 
 
 ### What are QSO-like objects?
-QSO stands for quasi-stellar object also known as quasars. A quasar is an extremely luminous active galactic nucleus (AGN). While most massive galaxies are believed to host supermassive black holes (it's not yet confirmed for every galaxy, especially small or dwarf galaxies), with mass ranging from millions to tens of billions of solar masses. The <b>accretion disk</b> forms when material (mainly gas and dust) loses angular momentum and spirals inward, heating up due to viscous dissipation. Due to the black hole immense gravitational force, the material 
-that compose the accretion disk (typically gasses), spirals inward while being compressed and heated to extreme temperature due to friction, 
-generating enormous amount of radiation predominantly in the optical, ultraviolet and X-ray wavelengths.   
+A <b>Quasi-Stellar Object</b> (QSO), commonly known as a quasar, is an extremely luminous <b>Active Galactic Nucleus</b> (AGN). Most massive galaxies are believed to host a supermassive black hole at their center, with masses ranging from millions to tens of billions of solar masses. An <b>accretion disk</b> forms from gas and dust spiraling toward the black hole, heated by intense viscous and magnetic processes, emitting enormous amounts of radiation across the electromagnetic spectrum, particularly in optical, ultraviolet, and X-ray wavelengths.   
 
 ### What is aberration?
 The aberration of light is an apparent shift in the position of a celestial object caused by the motion of the observer relative to the source 
@@ -35,3 +33,54 @@ operates in optical wavelengths and has defined the Gaia Celestial Reference Fra
 ### Baryons
 
 Baryons are particles like protons and neutrons. A baryonic component refers to the part of a system, such as galaxies, galactic clusters or the universe itself, that is made of  baryonic matter. Examples include, starts, gas, dust, planets, including black holes and neutron stars if they are from baryonic matter. Essentially, it includes all the "normal" matter we are familiar with.
+
+### Key concepts on Vector Spherical Harmonics (VSH):
+
+1. Definition and Basics of Vector Spherical Harmonics (VSH):
+   - Understanding the mathematical framework of VSH.
+   - Difference between scalar spherical hamonics and VSH.
+
+2. Application of VSH in Astronomy
+   - How VSH is used to analyse vector fields in celestial mechanics
+   - The role of VSH in decomposing proper motion fields
+
+3. VSH Expansion and Representation
+   - Representation of vector fields in celestial mechanics.
+   - Decomposition into toroidal and spheroidal components. 
+   - The significance of first-order harmonics ($l = 1$) for detecting systematic effects.
+
+4. Acceleration Effects in VSH
+   - How acceleration of the Solar System is modeled using VSH.
+   - Relationship between VSH expansion and dipole pattern of acceleration.
+   - Estimating the length of an acceleration vector from its Cartesian components.
+
+5. Numerical and Computational Aspect of VSH
+   - Least-square fitting techinques used in VSH analysis.
+   - Handing systematic biases in the expectation.
+   - Methods for ensuring robustness against outliers.
+
+6. VSH in the Gaia Mission
+   - Application of VSH to analyse Gaia data.
+   - Detecting and quantifying the acceleration of the Solar System.
+   - Handling large-scale systematics in Gaia astrometric solutions.
+
+7. Error Analysis and Bias Considerations
+   - Understanding transformation biases in spherical coordinate system.
+   - Analysing uncertainties and correlations in VSH expansion.
+   - Bootstrap resampling methods for error estimation.
+
+8. Comparison with Other Techniques
+   - Difference between direct least-squares fitting of acceleration components and VSH expansion.
+   - Benefits of using VSH for mitigating systematic errors in proper motion analysis. 
+
+---
+
+# Project Log
+
+This section aims to keep track of the progress made with the project. I will report all the updates made before pushing to the remote repository. This aims to facilitate writing the report once the project is completed.
+
+---
+
+### Downloading Data
+
+Follow the instructions presented in the [README.md](README.md#downloading-data-ringed_planet-telescope-floppy_disk) file
