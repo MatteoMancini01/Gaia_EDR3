@@ -83,12 +83,6 @@ This section aims to keep track of the progress made with the project. I will re
 
 ### Download Data
 
-Follow the instructions presented in the section [Download Data](README.md#downloading-data-ringed_planet-telescope-floppy_disk) from the [README.md](README.md) file
-
----
-
-### Download Data
-
 Follow the instructions presented in the section [Download Data](README.md#downloading-data-ringed_planet-telescope-floppy_disk) from the [README.md](README.md) file. 
 
 <b>How it works!</b>
@@ -127,5 +121,34 @@ Follow the instructions presented in the section [Download Data](README.md#downl
    This sends the query to Gaia archive sercer, through `launch_job_async()`, asynchronously. This means that the program is not blocked while waiting. And downloads the table of results when the query finishes, with `get_results()`
 
 - In the final step we save the results into a CSV file in the repository, so that one can load the data whenever it's required. Results are saved using `result.write("qso_full_data.csv", format="csv", overwrite=True)`, this also overwrite on the saved file `qso_full_data.csv` in case we need to redownload the data.
+
+<b>Data Structure</b>
+
+1. <b>source_id</b>, Unique Gaia identifier for the object
+2. <b>ra</b>, Right Ascension (celestial longitude) in degrees
+3. <b>dec</b>, Declination (celestial latitude) in degrees
+4. <b>pmra</b>, Proper motion in Right Ascension (mas/yr)
+5. <b>pmdec</b>, Proper motion in Declination (mas/yr)
+6. <b>parallax</b>, Parallax measurament (this is expected to be near zero for distant QSOs)
+7. <b>ruwe</b>, Renormalised Unit Weight Error (this indicates the quality of the data point)
+8. <b>phot_g_mean_mag</b>, Mean magnitude in Gaia's G-band 
+9. <b>nu_eff_used_in_astrometry</b>, Efficient wavenumber denoted as $\nu_{eff}$, this is used to charecterise the color of a celestial object by describing how its light is distributed across different wavelenghts.
+10. <b>parallax_error</b>, measure the uncentainty on parralax (standard deviation).
+11. <b>pmra_error</b>, Uncertainty in pmra.
+12. <b>pmdec_error</b>, Uncertainty in pmdec_error.
+
+<b>Visualisation</b>
+
+We decided to plot the data in 6 different histograms, three for each 5 and 6 parameter solutions. This was done by dividing the original data frame into `df_5param` and `df_6param`, to differentiate the two, we set `astomeric_params_solved` to 31 and 95 respectively. In binary 31 = 11111 and 95 = 1011111, different bits (1s and 0s) mean different things, and Gaia internally uses these codes to label how many parameters were solved for. Thus, we can filter by how many and which astrometric parameters Gaia fit fir that object.
+For the 5 parameter solutions we plotted histograms for the following parameters:
+-	Efficient wavenumber 
+-	Mean magnitude in Gaia’s G-band 
+-	RUWE 
+For the 6 parameter solutions:
+-	Normalised parallaxes
+-	Normalised pmra
+-	Normalised pmdec
+
+Plotting histograms is not only useful to visualise the distribution of each of those parameters, but also serves as a benchmark for comparing our plots to the plots in Gaia Early Data Release 3: Acceleration of the Solar System from Gaia astrometry, Klioner, S. A., et al. 2021. 
 
 ---
