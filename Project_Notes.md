@@ -144,6 +144,7 @@ For the 5 parameter solutions we plotted histograms for the following parameters
 -	Efficient wavenumber 
 -	Mean magnitude in Gaia’s G-band 
 -	RUWE 
+
 For the 6 parameter solutions:
 -	Normalised parallaxes
 -	Normalised pmra
