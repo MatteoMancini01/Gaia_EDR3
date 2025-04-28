@@ -81,6 +81,51 @@ This section aims to keep track of the progress made with the project. I will re
 
 ---
 
-### Downloading Data
+### Download Data
 
-Follow the instructions presented in the [README.md](README.md#downloading-data-ringed_planet-telescope-floppy_disk) file
+Follow the instructions presented in the section [Download Data](README.md#downloading-data-ringed_planet-telescope-floppy_disk) from the [README.md](README.md) file
+
+---
+
+### Download Data
+
+Follow the instructions presented in the section [Download Data](README.md#downloading-data-ringed_planet-telescope-floppy_disk) from the [README.md](README.md) file. 
+
+<b>How it works!</b>
+
+- Import the required libraries, namely, `astroquery.gaia` (a package to query the Gaia archive) and `pandas` (to help manipulate and view data).
+- Write the SQL query:
+   ```bash
+      query = """
+      SELECT 
+         agn.source_id, 
+         gs.ra, gs.dec, 
+         gs.pmra, gs.pmdec, 
+         gs.parallax, gs.parallax_error, 
+         gs.ruwe, gs.phot_g_mean_mag,
+         gs.nu_eff_used_in_astrometry,
+         gs.pmra_error,
+         gs.pmdec_error,
+         gs.pmra_pmdec_corr,
+         gs.astrometric_params_solved
+      FROM gaiadr3.agn_cross_id AS agn
+      JOIN gaiadr3.gaia_source AS gs 
+      ON agn.source_id = gs.source_id
+      """
+   ```
+   this defines a query that:
+   - Joins Gaia's AGN cross-match table (`agn_cross_id`) with the main Gaia source catalog (`gaia_source`) using the common `source_is`.
+   - Selects important astrometric properties: RA, Dec, proper motions, parallax, errors, photometric magnitude, RUWE, and atrometric parameters.
+
+- Once this is ready we launch the query asynchronously:
+   ```bash
+
+      job = Gaia.launch_job_async(query)
+      result = job.get_results()
+
+   ```
+   This sends the query to Gaia archive sercer, through `launch_job_async()`, asynchronously. This means that the program is not blocked while waiting. And downloads the table of results when the query finishes, with `get_results()`
+
+- In the final step we save the results into a CSV file in the repository, so that one can load the data whenever it's required. Results are saved using `result.write("qso_full_data.csv", format="csv", overwrite=True)`, this also overwrite on the saved file `qso_full_data.csv` in case we need to redownload the data.
+
+---

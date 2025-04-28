@@ -61,7 +61,7 @@ All the required libraries will be automatically installed.
     ```
 ---
 
-## Downloading Data :ringed_planet: :telescope: :floppy_disk:
+## Download Data :ringed_planet: :telescope: :floppy_disk:
 
 1. <b>Access the Gaia Archive:</b> :card_index_dividers:
      - Go to the Gaia Archive: [https://gea.esac.esa.int/archive/](https://gea.esac.esa.int/archive/)
