@@ -1,4 +1,4 @@
-# Key Definitions /& Project Objectives
+# Key Definitions \& Project Objectives
 ---
 ### Project General Objective
 The objective of this project is to use Gaia Early Data Release 3 (EDR3), to determine symmetric pattern of the solar system barycentre 
@@ -7,7 +7,7 @@ These objects are extremely far from us, making QSO-like objects appropriate ref
 from data, is the solar system moving w.r.t. QSO-like object. 
 
 ### What are QSO-like objects?
-QSO stands for quasi-stellar object also known as quasars. A quasar is an extremely luminous active galactic nucleus (AGN). While most massive galaxies are believed to host supermassive black holes (it's not yet confirmed for every galaxy, especially small or dwarf galaxies), with mass ranging from millions to tens of billions of solar masses. The <u>accretion disk</u> forms when material (mainly gas and dust) loses angular momentum and spirals inward, heating up due to viscous dissipation. Due to the black hole immense gravitational force, the material 
+QSO stands for quasi-stellar object also known as quasars. A quasar is an extremely luminous active galactic nucleus (AGN). While most massive galaxies are believed to host supermassive black holes (it's not yet confirmed for every galaxy, especially small or dwarf galaxies), with mass ranging from millions to tens of billions of solar masses. The <b>accretion disk</b> forms when material (mainly gas and dust) loses angular momentum and spirals inward, heating up due to viscous dissipation. Due to the black hole immense gravitational force, the material 
 that compose the accretion disk (typically gasses), spirals inward while being compressed and heated to extreme temperature due to friction, 
 generating enormous amount of radiation predominantly in the optical, ultraviolet and X-ray wavelengths.   
 
