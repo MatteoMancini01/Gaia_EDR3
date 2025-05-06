@@ -1,7 +1,12 @@
 import jax 
 import jax.numpy as jnp
-from math import factorial
+import math
+from jax import jit
+from functools import partial, lru_cache
 
+@lru_cache(maxsize=256)
+def factorial(n: int):
+    return math.factorial(n)
 
 def u_vec(alpha, delta):
     x_comp = jnp.cos(alpha)*jnp.cos(delta)
@@ -10,7 +15,7 @@ def u_vec(alpha, delta):
     return jnp.array(x_comp, y_comp, z_comp)
 
 # Defining Legendre functions for VSH
-def P_l0(x, l):
+def P_l(x, l):
 
     """
     Computes the associated Legendre function P_{l}(x),
@@ -31,62 +36,50 @@ def P_l0(x, l):
                         factorial(k)*factorial(l-k)*factorial(l-2*k))*x**(l-2*k)
         
     return sum0
-P_l = jax.jit(P_l0, static_argnames=["l"])
+P_l = jax.jit(P_l, static_argnames=["l"])
 
-def P_lm0(x, l, m):
-    """
-    Computes the associated Legendre function P_{lm}(x)
-    using your P_l(x, l) function.
-    
-    Args:
-        x : array or scalar
-        l : degree (integer)
-        m : order (integer)
-    
-    Returns:
-        P_lm(x)
+@lru_cache(maxsize=256)
+def make_legendre_polynomial(l: int):
+    def P_l_scalar(x_val):
+        sum0 = 0.
+        for k in range(0, l//2 + 1):
+            term = (-1)**k*factorial(2*l - 2*k)/(
+                2**l*factorial(k)*factorial(l - k)*factorial(l - 2*k)
+            ) * x_val**(l - 2*k)
+            sum0 += term
+        return sum0
+    return P_l_scalar
 
-    """
-    if m>=0:
+def make_P_lm_scalar(l, m):
+    P_l = make_legendre_polynomial(l)
+    for _ in range(abs(m)):
+        P_l = jax.grad(P_l)
 
-        # Define scalar function
-        f_scalar = lambda x_val: P_l(x_val, l)
+    def P_lm(x_val):
+        base = P_l(x_val)
+        if m >= 0:
+            return (1 - x_val**2)**(m/2)*base
+        else:
+            prefactor = (-1)**(-m)*factorial(l + m)/factorial(l - m)
+            return prefactor * (1 - x_val**2)**(-m/2)*base
+    return jax.jit(P_lm)
 
-        # Take m-th derivative (scalar)
-        for _ in range(m):
-            f_scalar = jax.grad(f_scalar)
+def P_lm(x, l, m):
+    P_lm_scalar = make_P_lm_scalar(l, m)
 
-        if jnp.ndim(x) == 0:  # scalar input
-            derivative_m = f_scalar(x)
-        else:  # array input
-            f_vector = jax.vmap(f_scalar)
-            derivative_m = f_vector(x)
-
-        prefactor = (1 - x**2)**(m/2)
-
-        return prefactor*derivative_m
-
+    if jnp.ndim(x) == 0:
+        return P_lm_scalar(x)
+    elif jnp.ndim(x) == 1:
+        return jax.vmap(P_lm_scalar)(x)
+    elif jnp.ndim(x) == 2:
+        return jax.vmap(jax.vmap(P_lm_scalar))(x)
     else:
-        # Define scalar function
-        f_scalar = lambda x_val: P_l(x_val, l)
+        raise ValueError("Unsupported input dimension for P_lm")
+P_lm = jax.jit(P_lm, static_argnames=["l", "m"])
 
-        # Take m-th derivative (scalar)
-        for _ in range(abs(m)):
-            f_scalar = jax.grad(f_scalar)
 
-        if jnp.ndim(x) == 0:  # scalar input
-            derivative_m = f_scalar(x)
-        else:  # array input
-            f_vector = jax.vmap(f_scalar)
-            derivative_m = f_vector(x)
-        # for both prefactors set -m as m in this case is negative and sign changes
-        prefactor1 = (1 - x**2)**(-m/2)
-        prefactor2 = (-1)**(-m)*factorial(l+m)/factorial(l-m)
-
-        return prefactor2*prefactor1*derivative_m
-P_lm = jax.jit(P_lm0, static_argnames=["l","m"])
-
-def Y_lm0(alpha, delta, l, m):
+@partial(jit, static_argnames=('l', 'm'))
+def Y_lm(alpha, delta, l, m):
 
     """
     Args:
@@ -105,9 +98,10 @@ def Y_lm0(alpha, delta, l, m):
     exp = jnp.exp(1j*m*alpha)
 
     return norm*P*exp
-Y_lm = jax.jit(Y_lm0, static_argnames=["l","m"])
+Y_lm = jax.jit(Y_lm, static_argnames=["l","m"])
 
-def Y_slm0(alpha, delta, l, m):
+@partial(jit, static_argnames=('l', 'm'))
+def Y_slm(alpha, delta, l, m):
 
     """
     Args:
@@ -126,29 +120,26 @@ def Y_slm0(alpha, delta, l, m):
     exp = jnp.exp(-1j*m*alpha)
 
     return norm*P*exp
-Y_slm = jax.jit(Y_slm0, static_argnames=["l","m"])
+Y_slm = jax.jit(Y_slm, static_argnames=["l","m"])
 
 
+def basis_vectors(alpha, delta):
+    e_alpha = jnp.stack([-jnp.sin(alpha), jnp.cos(alpha), 0.0], axis=0)
+    e_delta = jnp.stack([-jnp.cos(alpha) * jnp.sin(delta),
+                         -jnp.sin(alpha) * jnp.sin(delta),
+                          jnp.cos(delta)], axis=0)
+    return e_alpha, e_delta
 
-def T_lm_scalar0(alpha, delta, l, m):
+
+@partial(jit, static_argnames=('l', 'm'))
+def T_lm_scalar(alpha, delta, l, m):
 
     """
     Function designed for the torodoidal function
     """
+    e_alpha, e_delta = basis_vectors(alpha,delta)
 
-    e_alpha = jnp.array([
-        -jnp.sin(alpha) / jnp.cos(delta),
-         jnp.cos(alpha) / jnp.cos(delta),
-         0.0
-    ])
-
-    e_delta = jnp.array([
-        -jnp.cos(alpha) * jnp.sin(delta),
-        -jnp.sin(alpha) * jnp.sin(delta),
-         jnp.cos(delta)
-    ])
-
-    prefactor = 1 / jnp.sqrt(l * (l + 1))
+    prefactor = 1 / jnp.sqrt(l*(l + 1))
 
     grad_real_alpha = jax.grad(lambda a: jnp.real(Y_lm(a, delta, l, m)))
     grad_imag_alpha = jax.grad(lambda a: jnp.imag(Y_lm(a, delta, l, m)))
@@ -158,60 +149,52 @@ def T_lm_scalar0(alpha, delta, l, m):
     Ylm_grad_alpha = grad_real_alpha(alpha) + 1j * grad_imag_alpha(alpha)
     Ylm_grad_delta = grad_real_delta(delta) + 1j * grad_imag_delta(delta)
 
-    return prefactor * (Ylm_grad_delta*e_alpha - (1/jnp.cos(delta))*Ylm_grad_alpha*e_delta)
-T_lm_scalar = jax.jit(T_lm_scalar0, static_argnames=["l","m"])
+    return prefactor*(Ylm_grad_delta*e_alpha - (1/jnp.cos(delta))*Ylm_grad_alpha*e_delta)
+T_lm_scalar = jax.jit(T_lm_scalar, static_argnames=["l","m"])
 
-
-def T_slm_scalar0(alpha, delta, l, m):
+@partial(jit, static_argnames=('l', 'm'))
+def T_slm_scalar(alpha, delta, l, m):
     """
     Function designed to take the complex conjugate of S_lm
     """
     return jnp.conj(T_lm_scalar(alpha, delta, l, m))
-T_slm_scalar = jax.jit(T_slm_scalar0, static_argnames=["l","m"])
+T_slm_scalar = jax.jit(T_slm_scalar, static_argnames=["l","m"])
 
+@partial(jit, static_argnames=('l', 'm', 'grid'))
+def T_lm(alpha, delta, l, m, grid=True):
+    if jnp.ndim(alpha) == 0 and jnp.ndim(delta) == 0:
+        return T_lm_scalar(alpha, delta, l, m)
 
-def T_lm0(alpha, delta, l, m):
-    alpha = jnp.atleast_1d(alpha)
-    delta = jnp.atleast_1d(delta)
+    if grid:
+        A, D = jnp.meshgrid(alpha, delta, indexing='ij')
+        return jax.vmap(jax.vmap(lambda a, d: T_lm_scalar(a, d, l, m)))(A, D)
+    else:
+        return jax.vmap(lambda a, d: T_lm_scalar(a, d, l, m))(alpha, delta)
 
-    T_fn = jax.vmap(lambda a, d: T_lm_scalar(a, d, l, m))
+T_lm = jax.jit(T_lm, static_argnames=["l", "m", "grid"])
 
-    result = T_fn(alpha, delta)
+@partial(jit, static_argnames=('l', 'm', 'grid'))
+def T_slm(alpha, delta, l, m, grid=True):
+    if jnp.ndim(alpha) == 0 and jnp.ndim(delta) == 0:
+        return T_slm_scalar(alpha, delta, l, m)
 
-    # If inputs were scalars, unwrap the result
-    return result[0] if result.shape[0] == 1 else result
-T_lm = jax.jit(T_lm0, static_argnames=["l","m"])
+    if grid:
+        A, D = jnp.meshgrid(alpha, delta, indexing='ij')
+        return jax.vmap(jax.vmap(lambda a, d: T_slm_scalar(a, d, l, m)))(A, D)
+    else:
+        return jax.vmap(lambda a, d: T_slm_scalar(a, d, l, m))(alpha, delta)
 
-def T_slm0(alpha, delta, l, m):
-    alpha = jnp.atleast_1d(alpha)
-    delta = jnp.atleast_1d(delta)
+T_slm = jax.jit(T_slm, static_argnames=["l", "m", "grid"])
 
-    T_fn = jax.vmap(lambda a, d: T_slm_scalar(a, d, l, m))
-
-    result = T_fn(alpha, delta)
-
-    # If inputs were scalars, unwrap the result
-    return result[0] if result.shape[0] == 1 else result
-T_slm = jax.jit(T_slm0, static_argnames=["l","m"])
-
-def S_lm_scalar0(alpha, delta, l, m):
+@partial(jit, static_argnames=('l', 'm'))
+def S_lm_scalar(alpha, delta, l, m):
     """
     Function designed for the spheroidal function
     """
 
-    e_alpha = jnp.array([
-        -jnp.sin(alpha) / jnp.cos(delta),
-         jnp.cos(alpha) / jnp.cos(delta),
-         0.0
-    ])
+    e_alpha, e_delta = basis_vectors(alpha,delta)
 
-    e_delta = jnp.array([
-        -jnp.cos(alpha) * jnp.sin(delta),
-        -jnp.sin(alpha) * jnp.sin(delta),
-         jnp.cos(delta)
-    ])
-
-    prefactor = 1 / jnp.sqrt(l * (l + 1))
+    prefactor = 1/jnp.sqrt(l*(l + 1))
 
     grad_real_alpha = jax.grad(lambda a: jnp.real(Y_lm(a, delta, l, m)))
     grad_imag_alpha = jax.grad(lambda a: jnp.imag(Y_lm(a, delta, l, m)))
@@ -222,35 +205,38 @@ def S_lm_scalar0(alpha, delta, l, m):
     Ylm_grad_delta = grad_real_delta(delta) + 1j * grad_imag_delta(delta)
 
     return prefactor*((1/jnp.cos(delta))*Ylm_grad_alpha*e_alpha + Ylm_grad_delta*e_delta)
-S_lm_scalar = jax.jit(S_lm_scalar0, static_argnames=["l","m"])
+S_lm_scalar = jax.jit(S_lm_scalar, static_argnames=["l","m"])
 
-def S_slm_scalar0(alpha, delta, l, m):
+@partial(jit, static_argnames=('l', 'm'))
+def S_slm_scalar(alpha, delta, l, m):
     """
     Function designed to take the complex conjugate of S_lm
     """
     return jnp.conj(S_lm_scalar(alpha, delta, l, m))
-S_slm_scalar = jax.jit(S_slm_scalar0, static_argnames=["l","m"])
+S_slm_scalar = jax.jit(S_slm_scalar, static_argnames=["l","m"])
 
-def S_lm0(alpha, delta, l, m):
-    alpha = jnp.atleast_1d(alpha)
-    delta = jnp.atleast_1d(delta)
+@partial(jit, static_argnames=('l', 'm', 'grid'))
+def S_lm(alpha, delta, l, m, grid=True):
+    if jnp.ndim(alpha) == 0 and jnp.ndim(delta) == 0:
+        return S_lm_scalar(alpha, delta, l, m)
 
-    T_fn = jax.vmap(lambda a, d: S_lm_scalar(a, d, l, m))
+    if grid:
+        A, D = jnp.meshgrid(alpha, delta, indexing='ij')
+        return jax.vmap(jax.vmap(lambda a, d: S_lm_scalar(a, d, l, m)))(A, D)
+    else:
+        return jax.vmap(lambda a, d: S_lm_scalar(a, d, l, m))(alpha, delta)
 
-    result = T_fn(alpha, delta)
+S_lm = jax.jit(S_lm, static_argnames=["l", "m", "grid"])
 
-    # If inputs were scalars, unwrap the result
-    return result[0] if result.shape[0] == 1 else result
-S_lm = jax.jit(S_lm0, static_argnames=["l","m"])
+@partial(jit, static_argnames=('l', 'm', 'grid'))
+def S_slm(alpha, delta, l, m, grid=True):
+    if jnp.ndim(alpha) == 0 and jnp.ndim(delta) == 0:
+        return S_slm_scalar(alpha, delta, l, m)
 
-def S_slm0(alpha, delta, l, m):
-    alpha = jnp.atleast_1d(alpha)
-    delta = jnp.atleast_1d(delta)
+    if grid:
+        A, D = jnp.meshgrid(alpha, delta, indexing='ij')
+        return jax.vmap(jax.vmap(lambda a, d: S_slm_scalar(a, d, l, m)))(A, D)
+    else:
+        return jax.vmap(lambda a, d: S_slm_scalar(a, d, l, m))(alpha, delta)
 
-    T_fn = jax.vmap(lambda a, d: S_slm_scalar(a, d, l, m))
-
-    result = T_fn(alpha, delta)
-
-    # If inputs were scalars, unwrap the result
-    return result[0] if result.shape[0] == 1 else result
-S_slm = jax.jit(S_slm0, static_argnames=["l","m"])
+S_slm = jax.jit(S_slm, static_argnames=["l", "m", "grid"])
