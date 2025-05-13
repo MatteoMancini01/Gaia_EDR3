@@ -4,6 +4,9 @@ key publication [link](https://www.aanda.org/articles/aa/full_html/2021/05/aa397
 
 reference for vector spherical harmonics [link](https://www.aanda.org/articles/aa/pdf/2012/11/aa19927-12.pdf)
 
+Useful [link](https://irsa.ipac.caltech.edu/data/Gaia/dr3/gaia_dr3_source_colDescriptions.html) (checking data units)
+---
+
 ---
 ## Getting started :rocket:
 ---
@@ -37,7 +40,27 @@ Replace `<your_env>` with your preferred environment name, e.g. `gaia_venv`.
    pip install -r requirements.txt
    ```
 ---
-### Conda Environments :snake::test_tube:
+
+### Bonus Tip :gift:
+
+Most functions in this repository are coded with [JAX](https://docs.jax.dev/en/latest/index.html), a library for numerical computation resembling most properties of [NumPy](https://numpy.org/), with automatic differentiation (hence natural choice for coding VSH functions) including [JIT](https://docs.jax.dev/en/latest/_autosummary/jax.jit.html) compilation to speed up computations. 
+Like any other Python library, JAX can be installed for CPU on Linux, Windows and macOS. Additionally, if you machine has access to a NVIDIA GPU, it is recommended that you install JAX for GPU with:
+  ```bash
+  pip install -U "jax[cuda12]"
+  ```
+If you have a GPU, I strongly recommend installing JAX using the command above, as it will significantly speed up computations! To verify that your GPU is active with JAX run the following command:
+  ```python
+  import jax
+  print(jax.devices())
+  ```
+If the output shows:
+ ```bash
+[CudaDevice(id=0)]
+ ```
+Then your GPU is active and ready to compute with JAX. For more infromation please see [source](https://docs.jax.dev/en/latest/quickstart.html).
+---
+
+### Conda Environments :snake: :test_tube:
 
 1. Create a Conda Environment
    Run the following command to create your Conda environment
