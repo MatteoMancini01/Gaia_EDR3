@@ -152,4 +152,4 @@ For the 6 parameter solutions:
 
 Plotting histograms is not only useful to visualise the distribution of each of those parameters, but also serves as a benchmark for comparing our plots to the plots in Gaia Early Data Release 3: Acceleration of the Solar System from Gaia astrometry, Klioner, S. A., et al. 2021. 
 
----
+

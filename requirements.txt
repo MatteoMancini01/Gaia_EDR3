@@ -5,3 +5,5 @@ astroquery
 healpy
 numpyro
 scipy
+iminuit
+optax

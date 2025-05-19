@@ -3,6 +3,9 @@ import jax
 from jax import jit, vmap
 import math
 from functools import partial, lru_cache
+import numpyro
+import numpyro.distributions as dist
+from numpyro import handlers
 
 @lru_cache(maxsize=256)
 def factorial(n: int):
@@ -313,7 +316,7 @@ def make_Y_lm_gradients(l:int, m:int):
     def grad_alpha(alpha, delta):
         real_part = jax.grad(lambda a: jnp.real(Y_lm(a, delta, l, m)))(alpha)
         imag_part = jax.grad(lambda a: jnp.imag(Y_lm(a, delta, l, m)))(alpha)
-        return real_part + 1j * imag_part
+        return real_part + 1j*imag_part
 
     def grad_delta(alpha, delta):
         real_part = jax.grad(lambda d: jnp.real(Y_lm(alpha, d, l, m)))(delta)
@@ -715,10 +718,10 @@ def toy_model_l_1(alpha, delta, theta, grid):
     d = delta
     l=1
     V = (theta[0]*T_lm(a, d, l, 0, grid=grid) + 
-         theta[1]*jnp.real(T_lm(a,d,l,1,grid=grid)) +
+         theta[1]*jnp.real(T_lm(a,d,l,1,grid=grid)) -
          theta[2]*jnp.imag(T_lm(a,d,l,1,grid=grid)) + 
          theta[3]*S_lm(a,d,l,0,grid=grid) + 
-         theta[4]*jnp.real(S_lm(a,d,l,1,grid=grid)) + 
+         theta[4]*jnp.real(S_lm(a,d,l,1,grid=grid)) - 
          theta[5]*jnp.imag(S_lm(a,d,l,1,grid=grid)) 
          ) 
     return V
@@ -823,8 +826,8 @@ def model_vsh(alpha, delta, theta, lmax, grid):
                 s_r, s_i = theta[index + 2], theta[index + 3]
                 index += 4
 
-                V += t_r*jnp.real(T) + t_i*jnp.imag(T)
-                V += s_r*jnp.real(S) + s_i*jnp.imag(S)
+                V += t_r*jnp.real(T) - t_i*jnp.imag(T)
+                V += s_r*jnp.real(S) - s_i*jnp.imag(S)
 
     return V
 
@@ -902,154 +905,114 @@ def least_square(angles, obs, error, theta, lmax, grid):
     losses = batched_fn(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho)
     return jnp.sum(losses)
 
-def spheroidal_vector_summary(s10, s11r, s11i):
-
+@partial(jit, static_argnames=['lmax', 'grid'])
+def model_vsh_hmc(alpha, delta, theta_t, theta_s, lmax, grid):
     """
-    Summarizes the spheroidal (glide) vector field components as a Cartesian vector and corresponding sky coordinates.
+    Computes the full vector spherical harmonic (VSH) model up to degree `lmax` using given coefficients.
 
     Args:
-        s10 (float): Coefficient for the m = 0 spheroidal harmonic (S_10).
-        s11r (float): Real part of the m = 1 spheroidal coefficient (Re(S_11)).
-        s11i (float): Imaginary part of the m = 1 spheroidal coefficient (Im(S_11)).
+        alpha (float or jnp.ndarray): Right ascension(s) in radians.
+        delta (float or jnp.ndarray): Declination(s) in radians.
+        theta (array-like): Flattened array of VSH coefficients. For each (l, m), includes:
+            - t_lm and s_lm for m = 0 (real scalars),
+            - Re(t_lm), Im(t_lm), Re(s_lm), Im(s_lm) for m > 0.
+            Total length = 2 * lmax * (lmax + 2).
+        lmax (int): Maximum spherical harmonic degree to include in the model.
+        grid (bool, optional): 
+            - If True, evaluates over a meshgrid formed from `alpha` and `delta`.
+            - If False, assumes paired (alpha_i, delta_i) input arrays.
 
     Returns:
-        dict: A dictionary containing:
-            - `"G_vector (mas/yr)"`: Cartesian glide vector [G1, G2, G3] in mas/yr.
-            - `"Magnitude (μas/yr)"`: Norm of the vector in μas/yr.
-            - `"RA (deg)"`: Right ascension of the vector direction in degrees.
-            - `"Dec (deg)"`: Declination of the vector direction in degrees.
+        jnp.ndarray: Complex 3D vector field evaluated at each coordinate using VSH basis functions.
 
     Notes:
-        - Normalisation constants (C0 and C1) follow the VSH formalism used in the literature (e.g., Gaia Collaboration 2021).
-        - The resulting vector points in the direction of apparent systematic motion due to acceleration.
-        - Returned coordinates are suitable for visualization or physical interpretation.
-
-    Example:
-        >>> from src.models.vsh_model import spheroidal_vector_summary
-        >>> result = spheroidal_vector_summary(0.0002, 0.0001, 0.000253)
-        >>> for key, value in result.items():
-        >>>     print(f"{key:25}: {value}")
-            
+        - Accumulates toroidal and spheroidal components across all degrees 1 to lmax.
+        - Modeled field is constructed from linear combinations of T_lm and S_lm components.
+        - Coefficients are indexed according to VSH convention and mapped by (l, m).
     """
 
+    a = alpha
+    d = delta
+    V = jnp.zeros(3, dtype=jnp.complex64)
 
-    C0 = jnp.sqrt(8 * jnp.pi / 3)
-    C1 = jnp.sqrt(4 * jnp.pi / 3)
-
-    G3 = s10 / C0
-    G1 = -s11r / C1
-    G2 = -s11i / C1
-
-    G_mag = jnp.sqrt(G1**2 + G2**2 + G3**2)
-
-    dec = jnp.arcsin(G3/G_mag)
-    ra = jnp.arctan2(G2, G1) % (2*jnp.pi)
-
-    G_mag_uas = G_mag*1000  # mas/yr -> μas/yr
-    ra_deg = jnp.rad2deg(ra)
-    dec_deg = jnp.rad2deg(dec)
-
-    return {
-        "G_vector (mas/yr)": jnp.array([G1, G2, G3]),
-        "Magnitude (μas/yr)": G_mag_uas,
-        "RA (deg)": ra_deg,
-        "Dec (deg)": dec_deg
-    }
-
-def toroidal_vector_summary(t10, t11r, t11i):
-
-    """
-    Summarizes the toroidal (rotation-like) vector field components as a Cartesian vector and equatorial direction.
-
-    Args:
-        t10 (float): Coefficient for the m = 0 toroidal harmonic (T_10).
-        t11r (float): Real part of the m = 1 toroidal coefficient (Re(T_11)).
-        t11i (float): Imaginary part of the m = 1 toroidal coefficient (Im(T_11)).
-
-    Returns:
-        dict: A dictionary containing:
-            - `"R_vector (mas/yr)"`: Cartesian rotation vector [R1, R2, R3] in mas/yr.
-            - `"Magnitude (μas/yr)"`: Norm of the vector in μas/yr.
-            - `"RA (deg)"`: Right ascension of the vector direction in degrees.
-            - `"Dec (deg)"`: Declination of the vector direction in degrees.
-
-    Notes:
-        - This is analogous to the spheroidal summary but applies to toroidal components (spin-like structure).
-        - Used to interpret rotation patterns in VSH modeling, such as global frame spin or bulk rotation.
-        - Coordinates and magnitude are scaled for readability in physical units.
-    
-    Example:
-        >>> from src.models.vsh_model import toroidal_vector_summary
-        >>> result = toroidal_vector_summary(0.0002, 0.0001, 0.000253)
-        >>> for key, value in result.items():
-        >>>     print(f"{key:25}: {value}")
-    """
-
-    C0 = jnp.sqrt(8 * jnp.pi / 3)
-    C1 = jnp.sqrt(4 * jnp.pi / 3)
-
-    R3 = t10/C0
-    R1 = -t11r/C1
-    R2 = -t11i/C1
-
-    R_mag = jnp.sqrt(R1**2 + R2**2 + R3**2)
-
-    dec = jnp.arcsin(R3/R_mag)
-    ra = jnp.arctan2(R2, R1) % (2*jnp.pi)
-
-    R_mag_uas = R_mag*1000  # mas/yr -> μas/yr
-    ra_deg = jnp.rad2deg(ra)
-    dec_deg = jnp.rad2deg(dec)
-
-    return {
-        "R_vector (mas/yr)": jnp.array([R1, R2, R3]),
-        "Magnitude (μas/yr)": R_mag_uas,
-        "RA (deg)": ra_deg,
-        "Dec (deg)": dec_deg
-    }
-
-def vsh_minuit_limits(lmax, t_bound=0.01, s_bound=0.01):
-
-    """
-    Generates a dictionary of parameter bounds for use with Minuit optimisers based on the VSH expansion up to degree `lmax`.
-
-    Args:
-        lmax (int): Maximum VSH degree to include in the parameterisation.
-        t_bound (float, optional): Symmetric bound for toroidal (T_lm) coefficients. Default is +/-0.01 mas/yr.
-        s_bound (float, optional): Symmetric bound for spheroidal (S_lm) coefficients. Default is +/-0.01 mas/yr.
-
-    Returns:
-        dict: A mapping from parameter names (e.g., "x0", "x1", ...) to (lower, upper) bound tuples for use in Minuit.
-
-    Notes:
-        - For each (l, m) mode:
-            - If m = 0: adds 2 parameters (t_lm, s_lm).
-            - If m > 0: adds 4 parameters (Re/Im parts of t_lm and s_lm).
-        - Total parameter count = 2 * lmax * (lmax + 2), matching the length of the `theta` vector.
-        - Intended for use in constrained VSH fitting pipelines, such as Minuit-based optimisation.
-    
-    Example:
-        >>> from src.models.vsh_model import vsh_minuit_limits
-        >>> limits = vsh_minuit_limits(lmax=2, t_bound=0.01, s_bound=0.0085)
-
-    """
-
-    limits = {}
-    idx = 0
-
+    index_t = 0
+    index_s = 0
     for l in range(1, lmax + 1):
         for m in range(0, l + 1):
-            if m == 0:
-                # t_lm, s_lm (1 real each)
-                limits[f'x{idx}'] = (-t_bound, t_bound)
-                limits[f'x{idx+1}'] = (-s_bound, s_bound)
-                idx += 2
-            else:
-                # Re(t), Im(t), Re(s), Im(s)
-                limits[f'x{idx}'] = (-t_bound, t_bound)
-                limits[f'x{idx+1}'] = (-t_bound, t_bound)
-                limits[f'x{idx+2}'] = (-s_bound, s_bound)
-                limits[f'x{idx+3}'] = (-s_bound, s_bound)
-                idx += 4
+            T = T_lm(a, d, l, m, grid=grid)
+            S = S_lm(a, d, l, m, grid=grid)
 
-    return limits
+            if m == 0:
+                t_lm = theta_t[index_t]
+                s_lm = theta_s[index_s]
+                index_t += 1
+                index_s += 1
+                V += t_lm * T
+                V += s_lm * S
+            else:
+                t_r, t_i = theta_t[index_t], theta_t[index_t + 1]
+                s_r, s_i = theta_s[index_s], theta_s[index_s + 1]
+                index_t += 2
+                index_s += 2
+
+                V += t_r*jnp.real(T) - t_i*jnp.imag(T)
+                V += s_r*jnp.real(S) - s_i*jnp.imag(S)
+
+    return V
+
+@partial(jit, static_argnames=['lmax', 'grid'])
+def least_square_hmc(angles, obs, error, theta_t, theta_s, lmax, grid):
+
+    """
+    Computes the total least squares loss between observed proper motions and a VSH model prediction up to `lmax`.
+
+    Args:
+        angles (Tuple[jnp.ndarray, jnp.ndarray]):
+            - `alpha`: Array of right ascensions in radians.
+            - `delta`: Array of declinations in radians.
+        obs (Tuple[jnp.ndarray, jnp.ndarray]):
+            - `mu_alpha_obs`: Observed proper motions in RA (mu_alpha*).
+            - `mu_delta_obs`: Observed proper motions in Dec (mu_delta).
+        error (Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]):
+            - `sigma_mu_alpha`: Uncertainty in RA proper motion.
+            - `sigma_mu_delta`: Uncertainty in Dec proper motion.
+            - `rho`: Correlation between RA and Dec components.
+        theta (jnp.ndarray): Flattened array of VSH coefficients used to compute the modeled field.
+        lmax (int): Maximum spherical harmonic degree used in the model.
+        grid (bool, optional): 
+            - If True, evaluates over 2D meshgrid of coordinates.
+            - If False, evaluates paired positions element-wise.
+
+    Returns:
+        float: Sum of weighted squared residuals over all sources.
+
+    Notes:
+        - Projects the modeled vector field onto the local (e_alpha, e_delta) basis at each point.
+        - Uses full covariance matrix A for error propagation and residual weighting.
+        - Intended for use in fitting the VSH model to astrometric proper motion data (e.g., from Gaia).
+    """
+
+    alpha, delta = angles
+    mu_a_obs, mu_d_obs = obs
+    s_mu_a, s_mu_d, rho = error
+
+    def per_point(alpha_i, delta_i, mu_a_i, mu_d_i, s_a, s_d, r):
+        e_a, e_d = basis_vectors(alpha_i, delta_i)
+
+        A = jnp.array([
+            [s_a**2, r*s_a*s_d],
+            [r*s_a*s_d, s_d**2]
+        ])
+
+        V = model_vsh_hmc(alpha_i, delta_i, theta_t, theta_s, lmax=lmax, grid=grid)
+        V_alpha = jnp.vdot(V, e_a).real
+        V_delta = jnp.vdot(V, e_d).real
+
+        D = jnp.array([mu_a_i - V_alpha, mu_d_i - V_delta])
+        x = jnp.linalg.solve(A, D)
+        return D @ x
+
+    batched_fn = vmap(per_point)
+    losses = batched_fn(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho)
+    return jnp.sum(losses)
+
