@@ -74,12 +74,12 @@ def vsh_minuit_limits(lmax, t_bound=0.01, s_bound=0.01):
     return limits
 
 
-def cov_matrix_hmc(posterior_sample):
-
-    # input example posterior_sample['theta']
+def cov_matrix_hmc(posterior_sample, indices=None):
+    theta_samples = np.array(posterior_sample)
+    cov_matrix = np.cov(theta_samples, rowvar=False)
     
-    theta_samples  = np.array(posterior_sample)
-    cov_matrix = np.cov(theta_samples, rowvar=False)  # shape: (num_params, num_params)
+    if indices is not None:
+        cov_matrix = cov_matrix[np.ix_(indices, indices)]
 
     return cov_matrix
 

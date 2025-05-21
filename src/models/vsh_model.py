@@ -1016,3 +1016,22 @@ def least_square_hmc(angles, obs, error, theta_t, theta_s, lmax, grid):
     losses = batched_fn(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho)
     return jnp.sum(losses)
 
+@partial(jit, static_argnames = ['lmax'])
+def compute_X2(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho, theta, lmax):
+    """Compute X^2 residuals for each source."""
+
+    def per_point(alpha_i, delta_i, mu_a_i, mu_d_i, s_a, s_d, r):
+        e_a, e_d = basis_vectors(alpha_i, delta_i)
+        A = jnp.array([
+            [s_a**2, r * s_a * s_d],
+            [r * s_a * s_d, s_d**2]
+        ])
+        V = model_vsh(alpha_i, delta_i, theta, lmax, grid=False)
+        V_alpha = jnp.vdot(V, e_a).real
+        V_delta = jnp.vdot(V, e_d).real
+
+        D = jnp.array([mu_a_i - V_alpha, mu_d_i - V_delta])
+        return D.T @ jnp.linalg.inv(A) @ D
+
+    batched_fn = jnp.vectorize(per_point, signature='(),(),(),(),(),(),()->()')
+    return batched_fn(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho)

@@ -24,4 +24,4 @@ job = Gaia.launch_job_async(query)
 result = job.get_results()
 
 # Save as CSV
-result.write("qso_full_data.csv", format="csv", overwrite=True) # overwrite = True will allow to replace existing data when redownloaded.
+result.write("csv_files/qso_full_data.csv", format="csv", overwrite=True) # overwrite = True will allow to replace existing data when redownloaded.
