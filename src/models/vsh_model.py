@@ -718,11 +718,11 @@ def toy_model_l_1(alpha, delta, theta, grid):
     d = delta
     l=1
     V = (theta[0]*T_lm(a, d, l, 0, grid=grid) + 
-         theta[1]*jnp.real(T_lm(a,d,l,1,grid=grid)) -
-         theta[2]*jnp.imag(T_lm(a,d,l,1,grid=grid)) + 
+         2*theta[1]*jnp.real(T_lm(a,d,l,1,grid=grid)) -
+         2*theta[2]*jnp.imag(T_lm(a,d,l,1,grid=grid)) + 
          theta[3]*S_lm(a,d,l,0,grid=grid) + 
-         theta[4]*jnp.real(S_lm(a,d,l,1,grid=grid)) - 
-         theta[5]*jnp.imag(S_lm(a,d,l,1,grid=grid)) 
+         2*theta[4]*jnp.real(S_lm(a,d,l,1,grid=grid)) - 
+         2*theta[5]*jnp.imag(S_lm(a,d,l,1,grid=grid)) 
          ) 
     return V
 
@@ -807,7 +807,7 @@ def model_vsh(alpha, delta, theta, lmax, grid):
 
     a = alpha
     d = delta
-    V = jnp.zeros(3, dtype=jnp.complex64)
+    V = jnp.zeros(3) 
 
     index = 0
     for l in range(1, lmax + 1):
@@ -819,15 +819,15 @@ def model_vsh(alpha, delta, theta, lmax, grid):
                 t_lm = theta[index]
                 s_lm = theta[index + 1]
                 index += 2
-                V += t_lm * T
-                V += s_lm * S
+                V += t_lm * jnp.real(T) # remove real if wrong
+                V += s_lm * jnp.real(S)
             else:
                 t_r, t_i = theta[index], theta[index + 1]
                 s_r, s_i = theta[index + 2], theta[index + 3]
                 index += 4
 
-                V += t_r*jnp.real(T) - t_i*jnp.imag(T)
-                V += s_r*jnp.real(S) - s_i*jnp.imag(S)
+                V += 2*(t_r*jnp.real(T) - t_i*jnp.imag(T))
+                V += 2*(s_r*jnp.real(S) - s_i*jnp.imag(S))
 
     return V
 
@@ -888,133 +888,23 @@ def least_square(angles, obs, error, theta, lmax, grid):
     def per_point(alpha_i, delta_i, mu_a_i, mu_d_i, s_a, s_d, r):
         e_a, e_d = basis_vectors(alpha_i, delta_i)
 
-        A = jnp.array([
-            [s_a**2, r*s_a*s_d],
-            [r*s_a*s_d, s_d**2]
-        ])
-
         V = model_vsh(alpha_i, delta_i, theta, lmax=lmax, grid=grid)
-        V_alpha = jnp.vdot(V, e_a).real
-        V_delta = jnp.vdot(V, e_d).real
+        V_alpha = jnp.vdot(V, e_a)
+        V_delta = jnp.vdot(V, e_d)
 
-        D = jnp.array([mu_a_i - V_alpha, mu_d_i - V_delta])
-        x = jnp.linalg.solve(A, D)
-        return D @ x
+        d_alpha = mu_a_i - V_alpha
+        d_delta = mu_d_i - V_delta
 
-    batched_fn = vmap(per_point)
-    losses = batched_fn(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho)
-    return jnp.sum(losses)
+        norm_alpha = d_alpha / s_a
+        norm_delta = d_delta / s_d
 
-@partial(jit, static_argnames=['lmax', 'grid'])
-def model_vsh_hmc(alpha, delta, theta_t, theta_s, lmax, grid):
-    """
-    Computes the full vector spherical harmonic (VSH) model up to degree `lmax` using given coefficients.
-
-    Args:
-        alpha (float or jnp.ndarray): Right ascension(s) in radians.
-        delta (float or jnp.ndarray): Declination(s) in radians.
-        theta (array-like): Flattened array of VSH coefficients. For each (l, m), includes:
-            - t_lm and s_lm for m = 0 (real scalars),
-            - Re(t_lm), Im(t_lm), Re(s_lm), Im(s_lm) for m > 0.
-            Total length = 2 * lmax * (lmax + 2).
-        lmax (int): Maximum spherical harmonic degree to include in the model.
-        grid (bool, optional): 
-            - If True, evaluates over a meshgrid formed from `alpha` and `delta`.
-            - If False, assumes paired (alpha_i, delta_i) input arrays.
-
-    Returns:
-        jnp.ndarray: Complex 3D vector field evaluated at each coordinate using VSH basis functions.
-
-    Notes:
-        - Accumulates toroidal and spheroidal components across all degrees 1 to lmax.
-        - Modeled field is constructed from linear combinations of T_lm and S_lm components.
-        - Coefficients are indexed according to VSH convention and mapped by (l, m).
-    """
-
-    a = alpha
-    d = delta
-    V = jnp.zeros(3, dtype=jnp.complex64)
-
-    index_t = 0
-    index_s = 0
-    for l in range(1, lmax + 1):
-        for m in range(0, l + 1):
-            T = T_lm(a, d, l, m, grid=grid)
-            S = S_lm(a, d, l, m, grid=grid)
-
-            if m == 0:
-                t_lm = theta_t[index_t]
-                s_lm = theta_s[index_s]
-                index_t += 1
-                index_s += 1
-                V += t_lm * T
-                V += s_lm * S
-            else:
-                t_r, t_i = theta_t[index_t], theta_t[index_t + 1]
-                s_r, s_i = theta_s[index_s], theta_s[index_s + 1]
-                index_t += 2
-                index_s += 2
-
-                V += t_r*jnp.real(T) - t_i*jnp.imag(T)
-                V += s_r*jnp.real(S) - s_i*jnp.imag(S)
-
-    return V
-
-@partial(jit, static_argnames=['lmax', 'grid'])
-def least_square_hmc(angles, obs, error, theta_t, theta_s, lmax, grid):
-
-    """
-    Computes the total least squares loss between observed proper motions and a VSH model prediction up to `lmax`.
-
-    Args:
-        angles (Tuple[jnp.ndarray, jnp.ndarray]):
-            - `alpha`: Array of right ascensions in radians.
-            - `delta`: Array of declinations in radians.
-        obs (Tuple[jnp.ndarray, jnp.ndarray]):
-            - `mu_alpha_obs`: Observed proper motions in RA (mu_alpha*).
-            - `mu_delta_obs`: Observed proper motions in Dec (mu_delta).
-        error (Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]):
-            - `sigma_mu_alpha`: Uncertainty in RA proper motion.
-            - `sigma_mu_delta`: Uncertainty in Dec proper motion.
-            - `rho`: Correlation between RA and Dec components.
-        theta (jnp.ndarray): Flattened array of VSH coefficients used to compute the modeled field.
-        lmax (int): Maximum spherical harmonic degree used in the model.
-        grid (bool, optional): 
-            - If True, evaluates over 2D meshgrid of coordinates.
-            - If False, evaluates paired positions element-wise.
-
-    Returns:
-        float: Sum of weighted squared residuals over all sources.
-
-    Notes:
-        - Projects the modeled vector field onto the local (e_alpha, e_delta) basis at each point.
-        - Uses full covariance matrix A for error propagation and residual weighting.
-        - Intended for use in fitting the VSH model to astrometric proper motion data (e.g., from Gaia).
-    """
-
-    alpha, delta = angles
-    mu_a_obs, mu_d_obs = obs
-    s_mu_a, s_mu_d, rho = error
-
-    def per_point(alpha_i, delta_i, mu_a_i, mu_d_i, s_a, s_d, r):
-        e_a, e_d = basis_vectors(alpha_i, delta_i)
-
-        A = jnp.array([
-            [s_a**2, r*s_a*s_d],
-            [r*s_a*s_d, s_d**2]
-        ])
-
-        V = model_vsh_hmc(alpha_i, delta_i, theta_t, theta_s, lmax=lmax, grid=grid)
-        V_alpha = jnp.vdot(V, e_a).real
-        V_delta = jnp.vdot(V, e_d).real
-
-        D = jnp.array([mu_a_i - V_alpha, mu_d_i - V_delta])
-        x = jnp.linalg.solve(A, D)
-        return D @ x
+        X2 = (norm_alpha**2 - 2*r*norm_alpha*norm_delta + norm_delta**2) / (1 - r**2)
+        return X2
 
     batched_fn = vmap(per_point)
     losses = batched_fn(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho)
     return jnp.sum(losses)
+
 
 @partial(jit, static_argnames = ['lmax'])
 def compute_X2(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho, theta, lmax):

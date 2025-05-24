@@ -295,3 +295,12 @@ u_v = u @ v
 
 print(f'vT.u = {v_u}')
 print(f'uT.v = {u_v}')
+#%%
+
+import matplotlib.pyplot as plt
+import numpy as np
+from src.models.vsh_model import*
+#%%
+
+x = np.linspace(-1, 1, 100)
+plt.plot(x, make_legendre_polynomial(0, x))

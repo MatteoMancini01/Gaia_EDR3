@@ -30,8 +30,9 @@ dist/
 
 # Ignoring directory containing data
 
-data_gaia_edr3/
-qso_full_data.csv/
+
+csv_files/*.csv/
+synthetic_data/*
 
 # Cython build artifacts
 *.so
@@ -42,3 +43,12 @@ qso_full_data.csv/
 # Python bytecode
 __pycache__/
 *.py[cod]
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+# Igonre csv files
+*.csv
+>>>>>>> 2608251 (Adding the repository to my GitHub from my GitLab account)
+=======
+>>>>>>> d9dc0e2049e6b44d59414ceae721da91aeec2945

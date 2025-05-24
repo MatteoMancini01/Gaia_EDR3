@@ -1,7 +1,7 @@
 import jax
 import pandas as pd
 import jax.numpy as jnp
-from models.vsh_model import basis_vectors, count_vsh_coeffs, model_vsh
+from src.models.vsh_model import basis_vectors, count_vsh_coeffs, model_vsh
 from jax import random
 import numpy as np
 
@@ -20,7 +20,7 @@ key = random.PRNGKey(0)
 # Generate N random points on the sphere (RA, Dec in radians)
 N = 100000
 
-ra = random.uniform(key, shape=(N,), minval=0.0, maxval=2 * jnp.pi)
+ra = random.uniform(key, shape=(N,), minval=0.0, maxval=2*jnp.pi)
 dec = jnp.arcsin(random.uniform(key, shape=(N,), minval=-1.0, maxval=1.0))  # uniform on sphere
 
 angles_gen = jnp.stack([ra, dec])  # shape (2, N)
@@ -52,7 +52,7 @@ obs = jnp.stack([mu_alpha_noisy, mu_delta_noisy])  # shape (2, N)
 error = jnp.stack([
     jnp.ones(N) * noise_level,       # pmra_error
     jnp.ones(N) * noise_level,       # pmdec_error
-    jnp.zeros(N)                    # pmra_pmdec_corr
+    jnp.zeros(N)                     # pmra_pmdec_corr
 ])
 
 # Convert angles back to degrees for clarity (optional)
@@ -81,6 +81,6 @@ data = {
 df = pd.DataFrame(data)
 
 # Save to CSV
-df.to_csv('../../fake_data/fake_vsh_data.csv', index=False)
+df.to_csv('synthetic_data/synthetic_vsh_data.csv', index=False)
 
-np.save("../../fake_data/fake_data/theta_true.npy", np.array(theta_gen))
+np.save("synthetic_data/theta_true.npy", np.array(theta_gen))
