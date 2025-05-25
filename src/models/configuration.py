@@ -1,5 +1,7 @@
 
 import numpy as np
+from astropy.coordinates import SkyCoord
+from astropy import units as u
 
 def get_vsh_index_map(lmax):
     """
@@ -83,16 +85,6 @@ def cov_matrix_hmc(posterior_sample, indices=None):
 
     return cov_matrix
 
-def cov_matrix_minuit(covairance, 
-                     indices_s = np.array([4,5,1]),
-                     indices_t = np.array([2,3,0])):
-    
-    cov_matrix = np.array(covairance)
-    cov_slm = cov_matrix[np.ix_(indices_s, indices_s)]
-    cov_tlm = cov_matrix[np.ix_(indices_t, indices_t)]
-
-    return cov_slm, cov_tlm, cov_matrix
-
 def rho_matrix(cov_matrix):
 
     stddevs = np.sqrt(np.diag(cov_matrix))  # shape (3,)
@@ -134,9 +126,9 @@ def vsh_vector_summary(params, cov_matrix, kind="glide"):
         f"Corr_{vector_label}x_{vector_label}y": corr_matrix[0, 1],
         f"Corr_{vector_label}x_{vector_label}z": corr_matrix[0, 2],
         f"Corr_{vector_label}y_{vector_label}z": corr_matrix[1, 2],
-    }, v_vec, Sigma_v
+    }, v_vec, Sigma_v, corr_matrix
 
-def alpha_delta_summary(param, covariance):
+def ra_dec_summary(param, covariance):
     
     vx, vy, vz = param[0], param[1], param[2]
 
@@ -160,10 +152,89 @@ def alpha_delta_summary(param, covariance):
     Corr_ra_dec = Cov_ra_dec_deg/sigma_dec_deg*sigma_ra_deg
 
     return {'RA (deg)': ra_deg,
-            'Sigma_RA (deg)': sigma_dec_deg,
+            'Sigma_RA (deg)': sigma_ra_deg,
             'Dec (deg)': dec_deg,
             'Sigma_Dec (deg)': sigma_dec_deg,
             'Corr_RA_dec': Corr_ra_dec}
+
+def get_icrs_to_galactic_rotation():
+    # From Reid & Brunthaler (2004), used by Astropy internally (see docs)
+    return np.array([
+        [-0.0548755604, -0.8734370902, -0.4838350155],
+        [ 0.4941094279, -0.4448296300,  0.7469822445],
+        [-0.8676661490, -0.1980763734,  0.4559837762]
+    ])
+
+
+def vsh_vector_summary_galactic(v_vec_eq, Sigma_eq, kind="glide"):
+    # Rotate vector and covariance
+    R = get_icrs_to_galactic_rotation()
+    v_vec_gal = R @ v_vec_eq
+    Sigma_gal = R @ Sigma_eq @ R.T
+    sigma_gal = np.sqrt(np.diag(Sigma_gal))
+    v_mag_gal = np.linalg.norm(v_vec_gal)
+    sigma_v_mag = np.sqrt((v_vec_gal.T @ Sigma_gal @ v_vec_gal) / v_mag_gal**2)
+    corr_matrix = rho_matrix(Sigma_gal)
+
+    label = "|g|_gal" if kind == "glide" else "|ω|_gal"
+    vector_label = "g_gal" if kind == "glide" else "ω_gal"
+
+    return {
+        f"{label} (μas/yr)": v_mag_gal*1000,
+        f"{vector_label} (μas/yr)": v_vec_gal*1000,
+        f"|sigma_{vector_label}| (μas/yr)": sigma_v_mag*1000,
+        f"sigma_{vector_label} (μas/yr)": sigma_gal*1000,
+        f"Corr_{vector_label}x_{vector_label}y": corr_matrix[0, 1],
+        f"Corr_{vector_label}x_{vector_label}z": corr_matrix[0, 2],
+        f"Corr_{vector_label}y_{vector_label}z": corr_matrix[1, 2],
+    }, v_vec_gal, Sigma_gal, corr_matrix
+
+def lb_summary(v_gal, Sigma_gal):
+    """
+    Computes Galactic longitude and latitude + uncertainties and correlation
+    from Cartesian Galactic vector and covariance.
+
+    Parameters:
+        v_gal: array-like, shape (3,) — glide vector in galactic Cartesian coords (μas/yr)
+        Sigma_gal: array-like, shape (3, 3) — covariance in galactic frame
+
+    Returns:
+        dict with l, b and their uncertainties and correlation
+        
+    """
+
+    vx, vy, vz = v_gal
+
+    r0 = vx**2 + vy**2 + vz**2
+    r1 = vx**2 + vy**2
+
+    l_rad = np.arctan2(vy, vx) % (2*np.pi)
+    b_rad = np.arcsin(vz / np.sqrt(r0))
+
+    l_deg = np.rad2deg(l_rad)
+    b_deg = np.rad2deg(b_rad)
+
+    # Jacobian for [l, b] w.r.t. [vx, vy, vz]
+    J = np.array([
+        [-vy / r1, vx / r1, 0],
+        [-vx * vz / (r0 * np.sqrt(r1)), -vy * vz / (r0 * np.sqrt(r1)), np.sqrt(r1) / r0]
+    ])
+
+    Sigma_lb = J @ Sigma_gal @ J.T
+
+    sigma_l_deg = np.rad2deg(np.sqrt(Sigma_lb[0, 0]))
+    sigma_b_deg = np.rad2deg(np.sqrt(Sigma_lb[1, 1]))
+    Cov_lb = np.rad2deg(Sigma_lb[0, 1])  # cross-covariance in degrees²
+    Corr_lb = Cov_lb / (sigma_l_deg * sigma_b_deg)
+
+    return {
+        "l (deg)": l_deg,
+        "Sigma_l (deg)": sigma_l_deg,
+        "b (deg)": b_deg,
+        "Sigma_b (deg)": sigma_b_deg,
+        "Corr_l_b": Corr_lb
+    }
+
 
     
 
@@ -228,7 +299,7 @@ def spheroidal_vector_summary(parameters, variances, index = np.array([1,4,5])):
 
     # Magnitude uncertainty
     
-    sigma_mag = np.sqrt(G1**2*v_s11r + G2**2*v_s11i + G3**2*v_s10)/G_mag
+    sigma_mag = np.sqrt((G1**2*v_s11r + G2**2*v_s11i + G3**2*v_s10)/G_mag**2)
 
     dec = np.arcsin(G3/G_mag)
     ra = np.arctan2(G2, G1) % (2*np.pi)
