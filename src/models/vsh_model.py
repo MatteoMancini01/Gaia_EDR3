@@ -908,7 +908,35 @@ def least_square(angles, obs, error, theta, lmax, grid):
 
 @partial(jit, static_argnames = ['lmax'])
 def compute_X2(alpha, delta, mu_a_obs, mu_d_obs, s_mu_a, s_mu_d, rho, theta, lmax):
-    """Compute X^2 residuals for each source."""
+
+    """
+    Compute X^2 residuals for each source..
+
+    Args:
+        angles (Tuple[jnp.ndarray, jnp.ndarray]):
+            - `alpha`: Array of right ascensions in radians.
+            - `delta`: Array of declinations in radians.
+        obs (Tuple[jnp.ndarray, jnp.ndarray]):
+            - `mu_alpha_obs`: Observed proper motions in RA (mu_alpha*).
+            - `mu_delta_obs`: Observed proper motions in Dec (mu_delta).
+        error (Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]):
+            - `sigma_mu_alpha`: Uncertainty in RA proper motion.
+            - `sigma_mu_delta`: Uncertainty in Dec proper motion.
+            - `rho`: Correlation between RA and Dec components.
+        theta (jnp.ndarray): Flattened array of VSH coefficients used to compute the modeled field.
+        lmax (int): Maximum spherical harmonic degree used in the model.
+        grid (bool, optional): 
+            - If True, evaluates over 2D meshgrid of coordinates.
+            - If False, evaluates paired positions element-wise.
+
+    Returns:
+        float: Each individual weighted residual
+
+    Notes:
+        - Projects the modeled vector field onto the local (e_alpha, e_delta) basis at each point.
+        - Uses full covariance matrix A for error propagation and residual weighting.
+        - Intended for use in evaluating weighted residual for each datapoint, given VSH coefficient estimate (e.g., from Gaia).
+    """
 
     def per_point(alpha_i, delta_i, mu_a_i, mu_d_i, s_a, s_d, r):
         e_a, e_d = basis_vectors(alpha_i, delta_i)

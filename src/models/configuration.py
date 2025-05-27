@@ -106,7 +106,7 @@ def vsh_vector_summary(params, cov_matrix, kind="glide"):
     v_vec = np.array([vx, vy, vz])
     v_mag = np.linalg.norm(v_vec)
 
-    Jac = np.array([[-1/C1, 0, 0],
+    Jac = np.array([[-1/C1, 0, 0],  
                      [0, 1/C1, 0],
                      [0, 0, 1/C0]])
     
@@ -148,7 +148,7 @@ def ra_dec_summary(param, covariance):
 
     sigma_ra_deg = np.rad2deg(np.sqrt(Sigma_ra_dec[0][0]))
     sigma_dec_deg = np.rad2deg(np.sqrt(Sigma_ra_dec[1][1]))
-    Cov_ra_dec_deg = np.rad2deg(Sigma_ra_dec[0][0])
+    Cov_ra_dec_deg = np.rad2deg(Sigma_ra_dec[0][1])
     Corr_ra_dec = Cov_ra_dec_deg/sigma_dec_deg*sigma_ra_deg
 
     return {'RA (deg)': ra_deg,
@@ -235,205 +235,31 @@ def lb_summary(v_gal, Sigma_gal):
         "Corr_l_b": Corr_lb
     }
 
-
-    
-
-def spheroidal_vector_summary(parameters, variances, index = np.array([1,4,5])):
-
+def print_summary(dictionary, title=None, indent=2, precision=4):
     """
-    Summarizes the spheroidal (glide) vector field components as a Cartesian vector and corresponding sky coordinates.
+    Pretty-print a summary dictionary with optional title and formatting.
 
     Args:
-        s10 (float): Coefficient for the m = 0 spheroidal harmonic (S_10).
-        s11r (float): Real part of the m = 1 spheroidal coefficient (Re(S_11)).
-        s11i (float): Imaginary part of the m = 1 spheroidal coefficient (Im(S_11)).
-
-    Returns:
-        dict: A dictionary containing:
-            - `"G_vector (mas/yr)"`: Cartesian glide vector [G1, G2, G3] in mas/yr.
-            - `"Magnitude (μas/yr)"`: Norm of the vector in μas/yr.
-            - `"RA (deg)"`: Right ascension of the vector direction in degrees.
-            - `"Dec (deg)"`: Declination of the vector direction in degrees.
-
-    Notes:
-        - Normalisation constants (C0 and C1) follow the VSH formalism used in the literature (e.g., Gaia Collaboration 2021).
-        - The resulting vector points in the direction of apparent systematic motion due to acceleration.
-        - Returned coordinates are suitable for visualization or physical interpretation.
-
-    Example:
-        >>> from src.models.vsh_model import spheroidal_vector_summary
-        >>> spheroidal_vector_summary(0.0002, 0.0001, 0.000253, 4e-5, 1e-6, 7e-6)
-            
+        dictionary (dict): Dictionary of key-value pairs.
+        title (str, optional): Optional title header.
+        indent (int): Spaces for indenting each entry.
+        precision (int): Number of decimal places for floats.
     """
-    R = np.array([[-0.054875560, -0.8734370902, -0.4838350155],
-                  [0.4941094279, -0.4448296300, 0.7469822445],
-                  [-0.8676661490, -0.1980763734, 0.4559837762]])
-    i = index
-    p = parameters
-    v = variances
-    s10, s11r, s11i = p[i[0]], p[i[1]], p[i[2]] 
-    v_s10, v_s11r, v_s11i = v[i[0]], v[i[1]], v[i[2]] 
+    space = " " * indent
+    if title:
+        print(f"{title}")
+        print("-" * len(title))
 
-    # Normalisation constants from VSH paper
-    C0 = np.sqrt(8*np.pi/3)
-    C1 = np.sqrt(4*np.pi/3)
+    for key, value in dictionary.items():
+        if isinstance(value, float):
+            print(f"{space}{key:<20}: {value:.{precision}f}")
+        elif isinstance(value, (np.float32, np.float64)):
+            print(f"{space}{key:<20}: {float(value):.{precision}f}")
+        elif isinstance(value, int):
+            print(f"{space}{key:<20}: {value:d}")
+        else:
+            print(f"{space}{key:<20}: {value}")
 
-    # Convert s_lm to vector components
-    G3 = s10/C0
-    G1 = -s11r/C1
-    G2 = s11i/C1
-
-    sigmaG1 = np.sqrt((1/C1)**2*v_s11r)
-    sigmaG2 = np.sqrt((1/C1)**2*v_s11i)
-    sigmaG3 = np.sqrt((1/C0)**2*v_s10)
-
-
-    Sigma_eq = np.diag(np.array([sigmaG1**2, sigmaG2**2, sigmaG3**2]))
-    Sigma_gal = R @ Sigma_eq @ R.T
-    sigma_gal = np.sqrt(np.diag(Sigma_gal))
-
-    # Magnitude
-    G_mag = np.sqrt(G1**2 + G2**2 + G3**2)
-    G_eq_vec = np.array([G1, G2, G3]) # equatorial 
-    G_gal_vec = R @ G_eq_vec
-
-    # Magnitude uncertainty
-    
-    sigma_mag = np.sqrt((G1**2*v_s11r + G2**2*v_s11i + G3**2*v_s10)/G_mag**2)
-
-    dec = np.arcsin(G3/G_mag)
-    ra = np.arctan2(G2, G1) % (2*np.pi)
-
-    l = np.arctan2(G_gal_vec[1], G_gal_vec[0])%(2*np.pi)
-    d = np.arcsin(G_gal_vec[2]/G_mag)
-
-
-    den_ra = G1**2 + G2**2
-    error_ra_rad = np.sqrt((G2/den_ra)**2*v_s11r + (G1/den_ra)**2*v_s11i)
-
-    den_dec_xy = G_mag**3*np.sqrt(1 - (G3/G_mag)**2)
-    den_dec_z = G_mag*np.sqrt(1 - (G3/G_mag)**2)
-    d_x = -G1*G3/den_dec_xy
-    d_y = -G2*G3/den_dec_z
-    d_z = (1 - (G3/G_mag)**2)
-    error_dec_ra = np.sqrt(d_x**2*v_s11r + d_y**2*v_s11i + d_z**2*v_s10)
-
-    den_l = G_gal_vec[0]**2 + G_gal_vec[1]**2
-    error_l_rad = np.sqrt((G_gal_vec[1] / den_l)**2 * Sigma_gal[0, 0] + 
-                            (G_gal_vec[0] / den_l)**2 * Sigma_gal[1, 1]) # error radians l
-
-    den_d_xy = G_mag**3*np.sqrt(1 - (G_gal_vec[2]/G_mag)**2)
-    den_d_z = G_mag*np.sqrt(1 - (G_gal_vec[2]/G_mag)**2)
-    d_gal_x = -G_gal_vec[0]*G_gal_vec[2]/den_d_xy
-    d_gal_y = -G_gal_vec[1]*G_gal_vec[2]/den_d_z
-    d_gal_z = (1 - (G_gal_vec[2]/G_mag)**2)
-    error_d_rad = np.sqrt(d_gal_x**2 * Sigma_gal[0, 0] +
-                            d_gal_y**2 * Sigma_gal[1, 1] +
-                            d_gal_z**2 * Sigma_gal[2, 2])
-
-
-    G_mag_uas = G_mag*1000  # mas/yr -> μas/yr
-    sigma_mag_uas = sigma_mag*1000 # # mas/yr -> μas/yr
-    ra_deg = np.rad2deg(ra)
-    dec_deg = np.rad2deg(dec)
-    error_ra_deg = np.rad2deg(error_ra_rad)
-    error_dec_deg = np.rad2deg(error_dec_ra)
-
-    l_deg = np.rad2deg(l)
-    d_deg = np.rad2deg(d)
-    error_l_deg = np.rad2deg(error_l_rad)
-    error_d_deg = np.rad2deg(error_d_rad)
-    
-    print("Equatorial components:")
-    print(f"G_vec = {G_eq_vec*1000} +/- {np.array([sigmaG1, sigmaG2, sigmaG3])*1000}(μas/yr)")
-    print(f"Magnitude = {G_mag_uas} +/- {sigma_mag_uas} (μas/yr)")
-    print(f"RA = {ra_deg} +/- {error_ra_deg} (deg)")
-    print(f"Dec = {dec_deg} +/- {error_dec_deg} (deg)")
-    print("")
-    print("Galactic components:")
-    print(f"G_vec = {G_gal_vec*1000} +/- {sigma_gal*1000}(μas/yr)")
-    print(f"l = {l_deg} +/- {error_l_deg} (deg)")
-    print(f"d = {d_deg} +/- {error_d_deg} (deg)")
-
-def toroidal_vector_summary(parameters, variances, index = np.array([0,2,3])):
-
-    """
-    Summarizes the toroidal (rotation-like) vector field components as a Cartesian vector and equatorial direction.
-
-    Args:
-        t10 (float): Coefficient for the m = 0 toroidal harmonic (T_10).
-        t11r (float): Real part of the m = 1 toroidal coefficient (Re(T_11)).
-        t11i (float): Imaginary part of the m = 1 toroidal coefficient (Im(T_11)).
-
-    Returns:
-        dict: A dictionary containing:
-            - `"R_vector (mas/yr)"`: Cartesian rotation vector [R1, R2, R3] in mas/yr.
-            - `"Magnitude (μas/yr)"`: Norm of the vector in μas/yr.
-            - `"RA (deg)"`: Right ascension of the vector direction in degrees.
-            - `"Dec (deg)"`: Declination of the vector direction in degrees.
-
-    Notes:
-        - This is analogous to the spheroidal summary but applies to toroidal components (spin-like structure).
-        - Used to interpret rotation patterns in VSH modeling, such as global frame spin or bulk rotation.
-        - Coordinates and magnitude are scaled for readability in physical units.
-    
-    Example:
-        >>> from src.models.vsh_model import toroidal_vector_summary
-        >>> result = toroidal_vector_summary(0.0002, 0.0001, 0.000253)
-        >>> for key, value in result.items():
-        >>>     print(f"{key:25}: {value}")
-    """
-    i = index
-    p = parameters
-    v = variances
-    t10, t11r, t11i = p[i[0]], p[i[1]], p[i[2]] 
-    v_t10, v_t11r, v_t11i = v[i[0]], v[i[1]], v[i[2]] 
-
-    C0 = np.sqrt(8*np.pi/3)
-    C1 = np.sqrt(4*np.pi/3)
-
-    R3 = t10/C0
-    R1 = -t11r/C1
-    R2 = -t11i/C1
-
-    sigmaR1 = np.sqrt((1/C1)**2*v_t11r)
-    sigmaR2 = np.sqrt((1/C1)**2*v_t11i)
-    sigmaR3 = np.sqrt((1/C0)**2*v_t10)
-
-    R_mag = np.sqrt(R1**2 + R2**2 + R3**2)
-
-    sigma_mag = np.sqrt(R1**2*v_t11r + R2**2*v_t11i + R3**2*v_t10)/R_mag
-
-    dec = np.arcsin(R3/R_mag)
-    ra = np.arctan2(R2, R1) % (2*np.pi)
-
-    R_mag_uas = R_mag*1000  # mas/yr -> μas/yr
-    ra_deg = np.rad2deg(ra)
-    dec_deg = np.rad2deg(dec)
-
-    den_ra = R1**2 + R2**2
-    error_ra_rad = np.sqrt((R2/den_ra)**2*v_t11r + (R1/den_ra)**2*v_t11i)
-
-
-    den_dec_xy = R_mag**3*np.sqrt(1 - (R3/R_mag)**2)
-    den_dec_z = R_mag*np.sqrt(1 - (R3/R_mag)**2)
-    d_x = -R1*R3/den_dec_xy
-    d_y = -R2*R3/den_dec_z
-    d_z = (1 - (R3/R_mag)**2)
-    error_dec_ra = np.sqrt(d_x**2*v_t11r + d_y**2*v_t11i + d_z**2*v_t10)
-
-   
-    R_mag_uas = R_mag*1000  # mas/yr -> μas/yr
-    sigma_mag_uas = sigma_mag*1000 # # mas/yr -> μas/yr
-    ra_deg = np.rad2deg(ra)
-    dec_deg = np.rad2deg(dec)
-    error_ra_deg = np.rad2deg(error_ra_rad)
-    error_dec_deg = np.rad2deg(error_dec_ra)
-
-    print(f"R_vec = {np.array([R1, R2, R3])*1000} +/- {np.array([sigmaR1, sigmaR2, sigmaR3])*1000}(μas/yr)")
-    print(f"Magnitude = {R_mag_uas} +/- {sigma_mag_uas} (μas/yr)")
-    print(f"RA = {ra_deg} +/- {error_ra_deg} (deg)")
-    print(f"Dec = {dec_deg} +/- {error_dec_deg} (deg)")
 
 
 def config_data(df):

@@ -9,3 +9,4 @@ iminuit
 optax
 seaborn 
 corner
+arviz
