@@ -2,6 +2,7 @@
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy import units as u
+import jax.numpy as jnp
 
 def get_vsh_index_map(lmax):
     """
@@ -289,24 +290,13 @@ def config_data(df):
     return angles, obs, error 
 
 
-def chi2_red(minuit_result, lmax, n_data = None):
 
-    if n_data == None:
-        n_data = 1215942
-    else:
-        n_data = n_data
+def estimate_iat(n_samples, n_chains, n_eff_arr, index = [1,4,5]):
 
-    chi2 = minuit_result.fval
-    n_param = 2*lmax*(lmax+1)
-    ndof = n_data*2 - n_param
-    chi2_red = chi2 / ndof
+    subset_n_eff = n_eff_arr[index]
 
-    print(f'Goodness of fit χ^2_red =', chi2_red)
+    total_samples = n_samples*n_chains
 
-def cov_ts(hessian, index):
-    h = hessian
-    i = index
-    cov = np.array([[h[i[0]][i[0]], h[i[0]][i[1]], h[i[0]][i[2]]],
-                     [h[i[1]][i[0]], h[i[1]][i[1]], h[i[1]][i[2]]],
-                     [h[i[2]][i[0]], h[i[2]][i[1]], h[i[2]][i[2]]]])
-    return cov
+    iat = jnp.ceil(total_samples/jnp.min(subset_n_eff))
+
+    return int(iat)
