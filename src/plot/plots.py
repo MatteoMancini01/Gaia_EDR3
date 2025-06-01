@@ -70,7 +70,7 @@ def corner_plot_eq_comp(posterior_sample, save = None, bins = 100, smooth = 1):
     C0 = np.sqrt(8*np.pi/3)/1000
     C1 = np.sqrt(4*np.pi/3)/1000
 
-    samples_array = np.column_stack([ps['theta'][:,1]/C0, -ps['theta'][:,4]/C1, ps['theta'][:,5]/C1])
+    samples_array = np.column_stack([ps[:,1]/C0, -ps[:,4]/C1, ps[:,5]/C1])
 
     fig = plt.figure(figsize=(6, 6))  
     corner.corner(samples_array, 
@@ -117,9 +117,9 @@ def corner_plot_ra_dec(posterior_sample, smooth = 1, save = None, bins = 100):
     C0 = np.sqrt(8*np.pi/3)/1000
     C1 = np.sqrt(4*np.pi/3)/1000
 
-    gz = ps['theta'][:,1]/C0
-    gx = -ps['theta'][:,4]/C1
-    gy = ps['theta'][:,5]/C1
+    gz = ps[:,1]/C0
+    gx = -ps[:,4]/C1
+    gy = ps[:,5]/C1
 
     g_mag2 = gx**2 + gy**2 + gz**2
 
@@ -230,9 +230,9 @@ def mollweide_proj_galactic(posterior_sample, bins=300, save = None):
     C0 = np.sqrt(8 * np.pi / 3)
     C1 = np.sqrt(4 * np.pi / 3)
 
-    g_x = -ps['theta'][:, 4] / C1
-    g_y = ps['theta'][:, 5] / C1
-    g_z = ps['theta'][:, 1] / C0
+    g_x = -ps[:, 4] / C1
+    g_y = ps[:, 5] / C1
+    g_z = ps[:, 1] / C0
 
     # Normalise
     norm = np.sqrt(g_x**2 + g_y**2 + g_z**2)
