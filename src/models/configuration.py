@@ -264,6 +264,31 @@ def print_summary(dictionary, title=None, indent=2, precision=4):
 
 
 def config_data(df):
+    """
+    Prepares astrometric data from a DataFrame into the structured arrays required 
+    for VSH modeling or least-squares fitting.
+
+    Converts right ascension, declination, proper motion components, and their errors 
+    into JAX-compatible numpy arrays, grouped for efficient downstream use.
+
+    Args:
+        df (pd.DataFrame): Input DataFrame containing Gaia QSO or stellar data.
+            Expected columns:
+                - "ra": Right ascension in degrees
+                - "dec": Declination in degrees
+                - "pmra": Proper motion in RA (mas/yr)
+                - "pmdec": Proper motion in Dec (mas/yr)
+                - "pmra_error": Uncertainty in pmra
+                - "pmdec_error": Uncertainty in pmdec
+                - "pmra_pmdec_corr": Correlation between pmra and pmdec
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, np.ndarray]: 
+            - angles: (2, N) array of sky positions in radians as [ra, dec]
+            - obs: (2, N) array of proper motions as [pmra, pmdec]
+            - error: (3, N) array of uncertainties and correlations as 
+              [pmra_error, pmdec_error, pmra_pmdec_corr]
+    """
     
     # Preparing dataset
     ra_rad = np.deg2rad(np.array(df["ra"].values))
@@ -291,9 +316,38 @@ def config_data(df):
 
 
 
-def estimate_iat(n_samples, n_chains, n_eff_arr, index = [1,4,5]):
+def estimate_iat(n_samples, n_chains, n_eff_arr, index = None):
 
-    subset_n_eff = n_eff_arr[index]
+    """
+    Prepares astrometric data from a DataFrame into the structured arrays required 
+    for VSH modeling or least-squares fitting.
+
+    Converts right ascension, declination, proper motion components, and their errors 
+    into JAX-compatible numpy arrays, grouped for efficient downstream use.
+
+    Args:
+        df (pd.DataFrame): Input DataFrame containing Gaia QSO or stellar data.
+            Expected columns:
+                - "ra": Right ascension in degrees
+                - "dec": Declination in degrees
+                - "pmra": Proper motion in RA (mas/yr)
+                - "pmdec": Proper motion in Dec (mas/yr)
+                - "pmra_error": Uncertainty in pmra
+                - "pmdec_error": Uncertainty in pmdec
+                - "pmra_pmdec_corr": Correlation between pmra and pmdec
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, np.ndarray]: 
+            - angles: (2, N) array of sky positions in radians as [ra, dec]
+            - obs: (2, N) array of proper motions as [pmra, pmdec]
+            - error: (3, N) array of uncertainties and correlations as 
+              [pmra_error, pmdec_error, pmra_pmdec_corr]
+    """
+
+    if index:
+        subset_n_eff = n_eff_arr[index]
+    else:
+        subset_n_eff = n_eff_arr
 
     total_samples = n_samples*n_chains
 

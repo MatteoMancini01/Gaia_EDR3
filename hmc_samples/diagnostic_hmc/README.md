@@ -1,0 +1,1 @@
+Store HMC diagnostic results.

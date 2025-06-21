@@ -1,0 +1,1 @@
+Store posterior samples from HCM sampling algorithm.
