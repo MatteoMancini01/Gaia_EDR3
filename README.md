@@ -167,6 +167,8 @@ This will allow you to store the data in your directory, in the file ```qso_full
 
 ---
 
+![map](plots/main_plots/AGNs_per_deg_sq.png)
+
 ---------------------------------------------------
 
 ## :open_file_folder: Directory Structure 
