@@ -58,9 +58,9 @@ If you have a GPU, I strongly recommend installing JAX using the command above, 
   print(jax.devices())
   ```
 If the output shows:
- ```bash
-[CudaDevice(id=0)]
- ```
+  ```bash
+  [CudaDevice(id=0)]
+  ```
 Then your GPU is active and ready to compute with JAX. For more infromation please see [source](https://docs.jax.dev/en/latest/quickstart.html).
 ---
 
@@ -78,7 +78,7 @@ All the required libraries will be automatically installed.
 2. Activate your Conda envorpnment
 
     ```bash
-    conda activate m2_venv
+    conda activate gaia_venv
     ```
 
    To deactivate: 

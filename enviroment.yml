@@ -1,0 +1,17 @@
+name: gaia_venv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12.3  
+  - numpy
+  - matplotlib
+  - pandas
+  - astroquery
+  - healpy
+  - numpyro
+  - scipy
+  - iminuit
+  - optax
+  - seaborn
+  - corner
+  - arviz
