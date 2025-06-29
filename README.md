@@ -1,5 +1,9 @@
 #  Project Overview :mag: :memo:
 
+We present an independent reproduction of the solar system acceleration measurement reported in Gaia EDR3, using extragalactic sources as a non-rotating reference frame. Adopting a Bayesian inference approach based on vector spherical harmonics, we obtain results consistent with  [Klioner et al. (2021)](https://www.aanda.org/articles/aa/full_html/2021/05/aa39734-20/aa39734-20.html) in both magnitude and direction. Additionally, we explore the robustness of the inferred acceleration under varying outlier rejection thresholds and analyse the power spectral distribution of the VSH coefficients. Our findings reinforce the reliability of Gaia-based acceleration detection and validate alternative statistical methodologies.
+
+---
+
 key publication [link](https://www.aanda.org/articles/aa/full_html/2021/05/aa39734-20/aa39734-20.html)
 
 reference for vector spherical harmonics [link](https://www.aanda.org/articles/aa/pdf/2012/11/aa19927-12.pdf)
@@ -150,3 +154,27 @@ print(df.head())  # Check the data
 
 ```
 This will allow you to store the data in your directory, in the file ```qso_full_data.csv```. 
+
+---
+
+# :books:References \& :link:Links
+
+1. Klioner, S. A., Mignard, F., Lindegren, L., Bastian, U., McMillan, P. J., Hern´andez, J., Hobbs, D., Ramos-
+          Lerate, M., Biermann, M., Bombrun, A., et al. (2021). Gaia early data release 3-acceleration of
+          the solar system from gaia astrometry. Astronomy & Astrophysics, 649, A9. [https://www.aanda.org/articles/aa/full html/2021/05/aa39734-20/aa39734-20.html](https://www.aanda.org/articles/aa/fullhtml/2021/05/aa39734-20/aa39734-20.html)
+
+2. Mignard, F., & Klioner, S. (2012). Analysis of astrometric catalogues with vector spherical harmonics.
+          Astronomy & Astrophysics, 547, A59. [https://www.aanda.org/articles/aa/pdf/2012/11/aa19927-12.pdf](https://www.aanda.org/articles/aa/pdf/2012/11/aa19927-12.pdf)
+--- 
+# :bookmark: Appendix
+## A Use of Auto-Generation Tools
+
+### A.1 Copilot :man_pilot: :airplane:
+    GitHub Copilot was used to assist with the writing of function docstrings and some descriptive comments
+    throughout the project repository. Suggestions were accepted passively via autocomplete rather than
+    through explicit prompts or instructions.
+
+### A.2 Chat-GPT4 :robot:
+    Chat-GPT4 was used for, providing insights and suggestions for improving the structure and functionality
+    of the code. Generating concise and accurate summaries of complex texts to enhance understanding and
+    clarity.
