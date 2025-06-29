@@ -3,13 +3,25 @@
 We present an independent reproduction of the solar system acceleration measurement reported in Gaia EDR3, using extragalactic sources as a non-rotating reference frame. Adopting a Bayesian inference approach based on vector spherical harmonics, we obtain results consistent with  [Klioner et al. (2021)](https://www.aanda.org/articles/aa/full_html/2021/05/aa39734-20/aa39734-20.html) in both magnitude and direction. Additionally, we explore the robustness of the inferred acceleration under varying outlier rejection thresholds and analyse the power spectral distribution of the VSH coefficients. Our findings reinforce the reliability of Gaia-based acceleration detection and validate alternative statistical methodologies.
 
 ---
+# About Gaia Mission :satellite: :milky_way:
 
-key publication [link](https://www.aanda.org/articles/aa/full_html/2021/05/aa39734-20/aa39734-20.html)
+In 2013, the European Space Agency’s (ESA) (see [Prusti et al. (2016)](https://www.aanda.org/articles/aa/abs/2016/11/aa29272-16/aa29272-16.html)), launched a space telescope under
+the Gaia mission (ended 27th of March 2025), with the main objective of scanning the sky to reproduce
+the most precise 3D map of the Milky Way. This was achieved by measuring the positions, distances,
+motions, and other properties of over a billion stars, transforming our understanding of Galactic structure,
+stellar kinematics and fundamental reference frames, highly important for the scope of this project.
+Gaia EDR3 is a major data release from the ESA’s Gaia mission, published in December 2020. It
+includes improved astrometric and photometric data from nearly 1.8 billion sources, offering the most
+precise measurements of the positions, parallaxes, and proper motions. This served as a key step from
+DR2 to DR3, with significant advance in data quality and coverage.
 
-reference for vector spherical harmonics [link](https://www.aanda.org/articles/aa/pdf/2012/11/aa19927-12.pdf)
-
-Useful [link](https://irsa.ipac.caltech.edu/data/Gaia/dr3/gaia_dr3_source_colDescriptions.html) (checking data units)
 ---
+
+## QSO-like or quasars
+A <b>Quasi-Stellar Object</b> (QSO), commonly known as a quasar, is an extremely luminous <b>Active Galactic Nucleus</b> (AGN). Most massive galaxies are believed to host a supermassive black hole at their center, with masses ranging from millions to tens of billions of solar masses. An <b>accretion disk</b> forms from gas and dust spiraling toward the black hole, heated by intense viscous and magnetic processes, emitting enormous amounts of radiation across the electromagnetic spectrum, particularly in optical, ultraviolet, and X-ray wavelengths. Below we have a sky distributions of Gaia-CRF3 QSO-like sources using a Mollweide
+projection with a linear colour scale ranging from 0 to 80 ANGs per deg square (upper Figure), and the statistical weights usend in proper motion analysis (lower).
+![map1](plots/main_plots/AGNs_per_deg_sq.png)
+![map2](plots/main_plots/stat_weight_dist.png)
 
 ---
 ## Getting started :rocket:
@@ -165,10 +177,6 @@ This will allow you to store the data in your directory, in the file ```qso_full
 -	Perform weighted least square fit. See Equation 23, Section 4, in [report](report/report.pdf).
 -	Perform Hamiltonian Monte Carlo sampling Algorithm. Check for convergence, reduce autocorrelation in samples, by estimating the integrated autocorrelation time and thin samples accordingly. 
 
----
-
-![map](plots/main_plots/AGNs_per_deg_sq.png)
-
 ---------------------------------------------------
 
 ## :open_file_folder: Directory Structure 
@@ -217,6 +225,8 @@ This will allow you to store the data in your directory, in the file ```qso_full
 
 2. Mignard, F., & Klioner, S. (2012). Analysis of astrometric catalogues with vector spherical harmonics.
           Astronomy & Astrophysics, 547, A59. [https://www.aanda.org/articles/aa/pdf/2012/11/aa19927-12.pdf](https://www.aanda.org/articles/aa/pdf/2012/11/aa19927-12.pdf)
+3. Useful [link](https://irsa.ipac.caltech.edu/data/Gaia/dr3/gaia_dr3_source_colDescriptions.html) (checking data units)
+
 --- 
 # :bookmark: Appendix
 ## A Use of Auto-Generation Tools
