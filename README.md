@@ -173,36 +173,37 @@ This will allow you to store the data in your directory, in the file ```qso_full
 <pre>
 📂 Gaia_EDR3/
 │
-├── 📘 [Instructions.md](Instructions.md)                     # Instructions for student
-├── ⚖️  [LICENSE](LICENSE)
-├── 📘 [Project_Notes.md](Project_Notes.md)                   # Additional notes on the project
+├── 📘 Instructions.md                                        # Instructions for student
+├── ⚖️ LICENSE
+├── 📘 Project_Notes.md                                       # Additional notes on the project
 ├── 📘 README.md
 │
 ├── 📂 csv_files/                                             # Store data
 │
 ├── ⚙️ environment.yml                                        # Conda SetUp
-├── 📓 [functions_test.ipynb](functions_test.ipynb)           # Where we test VSH model
+├── 📓 functions_test.ipynb                                   # Where we test VSH model
 ├── 📂 hmc_samples/                                           # Store posterior samples stored as pkl files      
 │   ├── 📁 diagnostic_hmc                                     # Store diagnostic of samples
 │   ├── 📁 extension                                          # Diagnostic + posterior for extension
 │   ├── 📁 main_results                                       # Diagnostic + posterior samples for main results (i.e. lmax=3)
 │   └── 📁 posterior_samples                                  # Store posterior samples
 │   
-├── 📓 [main.ipynb](main.ipynb)                               # Download data, process data, main analysis
+├── 📓 main.ipynb                                             # Download data, process data, main analysis
 ├── 📂 outlier_mask/                                          # Store masks for rejected samples as pkl files (part of the extension)
 │
 ├── 📂 plots/                                                 # Where plots are stored for:
 │   ├── 📁 extention_plots                                    # Extension
-│   └── 📁 main_plots                                         # Main results (reproduced plot from [Klioner et al. (2021)](https://www.aanda.org/articles/aa/full_html/2021/05/aa39734-20/aa39734-20.html))
-├── 📓 [plots.ipynb](plots.ipynb)                             # Notebook containing reproduced plots
+│   └── 📁 main_plots                                         # Main results (reproduced plot from Klioner et al. (2021))
+├── 📓 plots.ipynb                                            # Notebook containing reproduced plots
 ├── 📂 src/                                                   # Where all the required functions are stored
 │   ├── 📁 data                                               # Store pipeline for downloading and handling data
 │   ├── 📁 models                                             # Store VSH model, weighted least square and configuration
-│   └── 📁 plot                                               # Store plotting functions, e.g. cornerplots 
+│   ├── 📁 plot                                               # Store plotting functions, e.g. cornerplots 
+│   └── 📁 save_load_pkl                                      # Save and load pickle files.
 ├── 📂 synthetic_data/                                        # Store generatede data, used to test HMC sampling algorithm.
 │   ├── 📑 synthetic_vsh_data.csv                             # Data generated using VSH expansion                                               
 │   └── 🧊 theta_true.npy                                     # True VSH coefficient values used to generate synthetic data.
-└── 📓 [test_lsq_hmc.ipynb](test_lsq_hmc.ipynb)               # Test least square and HMC sampling on synthetic data, check if we recover the correct VSH coefficient estimates
+└── 📓 test_lsq_hmc.ipynb                                     # Test least square and HMC sampling on synthetic data, check if we recover the correct VSH coefficient estimates
 </pre>
 ---------------------------------------------------
 
