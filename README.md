@@ -62,6 +62,7 @@ If the output shows:
   [CudaDevice(id=0)]
   ```
 Then your GPU is active and ready to compute with JAX. For more infromation please see [source](https://docs.jax.dev/en/latest/quickstart.html).
+
 ---
 
 ### Conda Environments :snake: :test_tube:
@@ -161,10 +162,49 @@ This will allow you to store the data in your directory, in the file ```qso_full
 :memo: List of all the things the pipeline and codebase do:
 
 -	Computes vectors spherical harmonics (VSH) expansion, the pipeline is built on JAX, allowing automatic differentiation, a crucial feature for VSH frameworks. 
--	Perform weighted least square fit, using the function weighted least square function. See Equation 23, Section 4, in [report](report/report.pdf).
+-	Perform weighted least square fit. See Equation 23, Section 4, in [report](report/report.pdf).
 -	Perform Hamiltonian Monte Carlo sampling Algorithm. Check for convergence, reduce autocorrelation in samples, by estimating the integrated autocorrelation time and thin samples accordingly. 
 
 ---
+
+---------------------------------------------------
+
+## :open_file_folder: Directory Structure 
+<pre>
+📂 Gaia_EDR3/
+│
+├── 📘 [Instructions.md](Instructions.md)                     # Instructions for student
+├── ⚖️  [LICENSE](LICENSE)
+├── 📘 [Project_Notes.md](Project_Notes.md)                   # Additional notes on the project
+├── 📘 README.md
+│
+├── 📂 csv_files/                                             # Store data
+│
+├── ⚙️ environment.yml                                        # Conda SetUp
+├── 📓 [functions_test.ipynb](functions_test.ipynb)           # Where we test VSH model
+├── 📂 hmc_samples/                                           # Store posterior samples stored as pkl files      
+│   ├── 📁 diagnostic_hmc                                     # Store diagnostic of samples
+│   ├── 📁 extension                                          # Diagnostic + posterior for extension
+│   ├── 📁 main_results                                       # Diagnostic + posterior samples for main results (i.e. lmax=3)
+│   └── 📁 posterior_samples                                  # Store posterior samples
+│   
+├── 📓 [main.ipynb](main.ipynb)                               # Download data, process data, main analysis
+├── 📂 outlier_mask/                                          # Store masks for rejected samples as pkl files (part of the extension)
+│
+├── 📂 plots/                                                 # Where plots are stored for:
+│   ├── 📁 extention_plots                                    # Extension
+│   └── 📁 main_plots                                         # Main results (reproduced plot from [Klioner et al. (2021)](https://www.aanda.org/articles/aa/full_html/2021/05/aa39734-20/aa39734-20.html))
+├── 📓 [plots.ipynb](plots.ipynb)                             # Notebook containing reproduced plots
+├── 📂 src/                                                   # Where all the required functions are stored
+│   ├── 📁 data                                               # Store pipeline for downloading and handling data
+│   ├── 📁 models                                             # Store VSH model, weighted least square and configuration
+│   └── 📁 plot                                               # Store plotting functions, e.g. cornerplots 
+├── 📂 synthetic_data/                                        # Store generatede data, used to test HMC sampling algorithm.
+│   ├── 📑 synthetic_vsh_data.csv                             # Data generated using VSH expansion                                               
+│   └── 🧊 theta_true.npy                                     # True VSH coefficient values used to generate synthetic data.
+└── 📓 [test_lsq_hmc.ipynb](test_lsq_hmc.ipynb)               # Test least square and HMC sampling on synthetic data, check if we recover the correct VSH coefficient estimates
+</pre>
+---------------------------------------------------
 
 # :books:References \& :link:Links
 
