@@ -1,0 +1,1 @@
+This is designed to store data after download. The user should be able to see two csv files `qso_full_data.csv`, containing full dataset both five and six-parameter solutions, and `filtered_qso_data.csv, this file contains five-parameter solutions source, after outlier rejection using clipping value kappa = 3. Run the notebook [main.ipynb](../main.ipynb), to store data.
