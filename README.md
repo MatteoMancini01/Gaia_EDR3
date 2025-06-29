@@ -17,7 +17,7 @@ DR2 to DR3, with significant advance in data quality and coverage.
 
 ---
 
-## QSO-like or quasars
+## QSO-like or quasars :sparkles:
 A <b>Quasi-Stellar Object</b> (QSO), commonly known as a quasar, is an extremely luminous <b>Active Galactic Nucleus</b> (AGN). Most massive galaxies are believed to host a supermassive black hole at their center, with masses ranging from millions to tens of billions of solar masses. An <b>accretion disk</b> forms from gas and dust spiraling toward the black hole, heated by intense viscous and magnetic processes, emitting enormous amounts of radiation across the electromagnetic spectrum, particularly in optical, ultraviolet, and X-ray wavelengths. Below we have a sky distributions of Gaia-CRF3 QSO-like sources using a Mollweide
 projection with a linear colour scale ranging from 0 to 80 ANGs per deg square (upper Figure), and the statistical weights usend in proper motion analysis (lower).
 ![map1](plots/main_plots/AGNs_per_deg_sq.png)
@@ -190,7 +190,8 @@ This will allow you to store the data in your directory, in the file ```qso_full
 │
 ├── 📂 csv_files/                                             # Store data
 │
-├── ⚙️ environment.yml                                        # Conda SetUp
+├── ⚙️ environment.yml                                        # Conda set up
+├── ⚙️ requirements.txt                                       # Python virtual environment set up requirements
 ├── 📓 functions_test.ipynb                                   # Where we test VSH model
 ├── 📂 hmc_samples/                                           # Store posterior samples stored as pkl files      
 │   ├── 📁 diagnostic_hmc                                     # Store diagnostic of samples
@@ -216,6 +217,7 @@ This will allow you to store the data in your directory, in the file ```qso_full
 └── 📓 test_lsq_hmc.ipynb                                     # Test least square and HMC sampling on synthetic data, check if we recover the correct VSH coefficient estimates
 </pre>
 ---------------------------------------------------
+
 
 # :books:References \& :link:Links
 
