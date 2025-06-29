@@ -156,6 +156,15 @@ print(df.head())  # Check the data
 This will allow you to store the data in your directory, in the file ```qso_full_data.csv```. 
 
 ---
+## Key Features :key:
+
+:memo: List of all the things the pipeline and codebase do:
+
+-	Computes vectors spherical harmonics (VSH) expansion, the pipeline is built on JAX, allowing automatic differentiation, a crucial feature for VSH frameworks. 
+-	Perform weighted least square fit, using the function weighted least square function. See Equation 23, Section 4, in [report](report/report.pdf).
+-	Perform Hamiltonian Monte Carlo sampling Algorithm. Check for convergence, reduce autocorrelation in samples, by estimating the integrated autocorrelation time and thin samples accordingly. 
+
+---
 
 # :books:References \& :link:Links
 
