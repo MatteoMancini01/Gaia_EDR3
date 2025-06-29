@@ -145,6 +145,13 @@ def corner_plot_ra_dec(posterior_sample, smooth = 1, save = None, bins = 100):
                   color = 'navy',
                   smooth=smooth,
                   fig=fig)
+    
+    # Add Galactic centre
+    ra_gc = 266.41683
+    dec_gc = -29.0078
+    axes = np.array(fig.axes).reshape((2, 2))
+    ax = axes[1, 0]  # RA vs Dec subplot
+    ax.plot(ra_gc, dec_gc, 'x', color = 'red', markersize=6, markeredgewidth=1)
 
     plt.tight_layout()
 

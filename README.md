@@ -10,7 +10,7 @@ Useful [link](https://irsa.ipac.caltech.edu/data/Gaia/dr3/gaia_dr3_source_colDes
 ---
 ## Getting started :rocket:
 ---
-### Python Virtual Enviroments :snake::test_tube:
+### Python Virtual Enviroments :snake: :test_tube:
 
 1. Create a Virtual Environment
 

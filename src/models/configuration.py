@@ -354,3 +354,36 @@ def estimate_iat(n_samples, n_chains, n_eff_arr, index = None):
     iat = jnp.ceil(total_samples/jnp.min(subset_n_eff))
 
     return int(iat)
+
+def psd_vsh_coeff(sample, lmax):
+
+    """
+    Compute toroidal and spheroidal power spectrum (C_l^T and C_l^S) for VSH coefficients at fixed l.
+
+    Parameters:
+        sample (ndarray): Array of shape (n_samples, n_coeffs) containing VSH coefficients
+        lmax (int): Maximum degree (l) of the VSH expansion
+
+    Returns:
+        tuple of ndarrays: (C_T, C_S), each of shape (n_samples,)
+    """
+    t_10 = sample[:,0]
+    s_10 = sample[:,1]
+
+    t_power = t_10**2
+    s_power = s_10**2
+
+    pre_factor = 1/(2*lmax+1)
+
+    idx = 2
+    for _ in range(2, lmax+1):
+
+        t_power += 2*(sample[:,idx]**2 + sample[:,idx+1]**2)
+        s_power += 2*(sample[:,idx+2]**2 + sample[:,idx+3]**2)
+        idx += 4
+
+    C_T = pre_factor*t_power
+    C_S = pre_factor*s_power
+
+    return C_T, C_S
+
