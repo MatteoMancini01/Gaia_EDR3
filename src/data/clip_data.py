@@ -11,7 +11,7 @@ def least_square_clip(angles, obs, error, theta_init, lmax = 3, kappa=3.0, max_i
     with iterative outlier rejection.
 
     This function applies an iterative clipping procedure to fit a VSH model to observed proper motions, 
-    removing outliers based on a threshold on normalized residuals (X^2). The model parameters are 
+    removing outliers based on a threshold on normalised residuals (X^2). The model parameters are 
     optimized using the Minuit minimizer, and convergence is determined by the stability of the set of 
     outlier-rejected sources across iterations.
 
@@ -24,7 +24,7 @@ def least_square_clip(angles, obs, error, theta_init, lmax = 3, kappa=3.0, max_i
             representing uncertainties and correlation in the proper motions.
         theta_init (jnp.ndarray): Initial guess for the VSH parameters (flattened array).
         lmax (int, optional): Maximum degree of the VSH expansion. Default is 3.
-        kappa (float, optional): Clipping threshold multiplier for residuals. Sources with normalized 
+        kappa (float, optional): Clipping threshold multiplier for residuals. Sources with normalised 
             residuals > kappa * median are excluded. Default is 3.0.
         max_iter (int, optional): Maximum number of clipping iterations. Default is 10.
 
@@ -35,7 +35,7 @@ def least_square_clip(angles, obs, error, theta_init, lmax = 3, kappa=3.0, max_i
 
     Notes:
         - VSH parameters are interpreted as complex coefficients and converted to Cartesian frame using 
-          normalization constants.
+          normalisation constants.
         - Uses Minuit to perform least squares optimization with errordef = Minuit.LEAST_SQUARES.
         - `jax.clear_caches()` is called at each iteration to manage JAX memory.
         - Outlier rejection is based on chi-squared residuals of all sources (not just the current inliers).

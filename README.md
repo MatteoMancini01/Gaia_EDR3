@@ -214,6 +214,7 @@ This will allow you to store the data in your directory, in the file ```qso_full
 ├── 📂 synthetic_data/                                        # Store generatede data, used to test HMC sampling algorithm.
 │   ├── 📑 synthetic_vsh_data.csv                             # Data generated using VSH expansion                                               
 │   └── 🧊 theta_true.npy                                     # True VSH coefficient values used to generate synthetic data.
+├── 📓 extension.ipynb                                        # Extension experiments
 └── 📓 test_lsq_hmc.ipynb                                     # Test least square and HMC sampling on synthetic data, check if we recover the correct VSH coefficient estimates
 </pre>
 ---------------------------------------------------
