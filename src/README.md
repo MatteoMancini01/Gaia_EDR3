@@ -1,4 +1,4 @@
-# :folder: `src` Directory Overview
+# :file_folder: `src` Directory Overview
 
 This folder contains all core source code modules, organized into data utilities, models, and plotting tools.
 
